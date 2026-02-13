@@ -9,8 +9,8 @@
 #'
 #' @examples
 find.azimuth <- function(elevation2d,
-                       elevation,
-                       view_inclination){
+                         elevation,
+                         view_inclination){
   # Step 1: convert all angles exactly once to radians
   deg2rad     <- pi / 180
   elevation2d_rad <- elevation2d * deg2rad

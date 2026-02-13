@@ -7,27 +7,31 @@
 \alias{Rz}
 \title{Create and apply 3D Euler rotations}
 \usage{
-Rx(roll3d)
+rotate3d(pitch, yaw, roll)
 
-Ry(yaw3d)
+Rx(roll)
 
-Rz(pitch3d)
+Ry(yaw)
+
+Rz(pitch)
 }
 \arguments{
-\item{roll3d}{numeric; rotation about the x-axis, in degrees}
+\item{pitch}{numeric; rotation about the z-axis, in degrees}
 
-\item{yaw3d}{numeric; rotation about the y-axis, in degrees}
+\item{yaw}{numeric; rotation about the y-axis, in degrees}
 
-\item{pitch3d}{numeric; rotation about the z-axis, in degrees}
+\item{roll}{numeric; rotation about the x-axis, in degrees}
 }
 \value{
-a 3x3 rotation matrix
+a 3x3 rotation matrix with Euler rotations applied
 }
 \description{
-Create 3x3 rotation matrices from Euler angles (roll, yaw, pitch).
+Create 3x3 rotation matrices after applying pitch-yaw-roll ("ZYX") Euler rotations.
 }
 \section{Functions}{
 \itemize{
+\item \code{rotate3d()}: Create apply Euler rotations (roll, yaw, pitch)
+
 \item \code{Rx()}: Rotate about the x-axis
 
 \item \code{Ry()}: Rotate about the y-axis
@@ -39,5 +43,5 @@ Create 3x3 rotation matrices from Euler angles (roll, yaw, pitch).
 # rotate 30 degrees about x
 Rx(30)
 # rotate 45 about z, then 30 about y, then -80 about x
-Rx(-80) \%*\% Ry(30) \%*\% Rz(45)
+rotate3d(45, 30, -80)
 }

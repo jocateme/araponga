@@ -10,17 +10,17 @@
 #'
 #' @examples
 #' # object pointed up 15 degrees
-#' elevation2d.from.(15, 0, 0, plot = TRUE)
+#' elevation2d.from.3d(15, 0, 0, plot = TRUE)
 #' # object pointed up 15 and right 30 degrees
-#' elevation2d.from.(15, -30, 0, plot = TRUE)
+#' elevation2d.from.3d(15, -30, 0, plot = TRUE)
 #' # object pointed up 15 degrees, looked at from 30 degrees below
-#' elevation2d.from.(15, 0, -30, plot = TRUE)
-elevation2d.from. <- function(elevation,
-                            azimuth,
-                            view_inclination,
-                            plot = FALSE){
+#' elevation2d.from.3d(15, 0, -30, plot = TRUE)
+elevation2d.from.3d <- function(elevation,
+                                azimuth,
+                                view_inclination,
+                                plot = FALSE){
   
-  R_total <- rotate(elevation,
+  R_total <- rotate3d(elevation,
                       azimuth,
                       view_inclination)
   

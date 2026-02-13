@@ -1,4 +1,4 @@
-#' Find possible elevations that can project a known 2D elevation, given known view inclination and candidate azimuths
+#' Find elevations that can project a known 2D elevation, given known view inclination and candidate azimuths
 #'
 #' @param candidate.elevations
 #' @param candidate.azimuths
@@ -12,18 +12,18 @@
 #'
 #' @examples
 find.candidate.elevations <- function(candidate.elevations,
-                             candidate.azimuths,
-                             elevation2d,
-                             view_inclination,
-                             plot = TRUE, 
-                             return = "elevation"){
+                                      candidate.azimuths,
+                                      elevation2d,
+                                      view_inclination,
+                                      plot = TRUE, 
+                                      return = "elevation"){
   
   candidate.elevations <- sort(unique(candidate.elevations))
   candidate.azimuths <- sort(unique(candidate.azimuths))
-    
+  
   elevation_all <- find.elevation(elevation2d = elevation2d,
-                                azimuth = candidate.azimuths,
-                                view_inclination = view_inclination.range)
+                                  azimuth = candidate.azimuths,
+                                  view_inclination = view_inclination)
   
   
   df <- data.frame(

@@ -19,48 +19,48 @@
 #' #' # pointed down
 #' elevation2d.from.xy(0,-1,0,0, plot = TRUE)
 elevation2d.from.xy <- function(x_tip,
-                            y_tip,
-                            x_base,
-                            y_base,
-                            plot = FALSE){
+                                y_tip,
+                                x_base,
+                                y_base,
+                                plot = FALSE){
   dx <- x_tip - x_base
   dy <- y_tip - y_base
   elevation2d <- rad2deg(atan2(dy, dx))
-
+  
   if(plot){
     xlim = c(x_base - abs(x_tip - x_base) - 0.5, x_base + abs(x_tip - x_base) + 0.5)
     ylim = c(y_base - abs(y_tip - y_base) - 0.5, y_base + abs(y_tip - y_base) + 0.5)
     graphics::plot(x = c(x_tip, x_base),
-         y = c(y_tip, y_base),
-         type = "l",
-         xlab = "x",
-         ylab = "y",
-         xlim = xlim,
-         ylim = ylim)
+                   y = c(y_tip, y_base),
+                   type = "l",
+                   xlab = "x",
+                   ylab = "y",
+                   xlim = xlim,
+                   ylim = ylim)
     graphics::lines(x = c(x_base, max(xlim)),
-          y = c(y_base, y_base),
-          lty = 2)
+                    y = c(y_base, y_base),
+                    lty = 2)
     angles <- deg2rad(seq(from = min(0, elevation2d),
                           to = max(0, elevation2d),
                           by = 0.01))
     r <- 0.2*min(diff(xlim), diff(ylim))
     graphics::lines(x = c(x_base,
-                x_base + r*cos(angles),
-                x_base),
-          y = c(y_base,
-                y_base + r*sin(angles),
-                y_base),
-          col = "darkblue")
+                          x_base + r*cos(angles),
+                          x_base),
+                    y = c(y_base,
+                          y_base + r*sin(angles),
+                          y_base),
+                    col = "darkblue")
     if(elevation2d < 0){ytxt <- min(y_base + 0.1*diff(ylim) * sin(angles))} else {ytxt <- max(y_base + 0.1*diff(ylim) * sin(angles))}
     graphics::text(x = max(x_base + 0.1*diff(xlim) * cos(angles)),
-         y =  ytxt,
-         labels = paste0(round(elevation2d, 2), "\u00B0"),
-         col = "darkblue")
+                   y =  ytxt,
+                   labels = paste0(round(elevation2d, 2), "\u00B0"),
+                   col = "darkblue")
     graphics::points(x = c(x_base, x_tip),
-           y = c(y_base, y_tip),
-           col = c("darkgreen", "darkred"),
-           pch = 16)
+                     y = c(y_base, y_tip),
+                     col = c("darkgreen", "darkred"),
+                     pch = 16)
   }
-
+  
   return(elevation2d)
 }

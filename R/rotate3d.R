@@ -1,11 +1,11 @@
 #' Create and apply 3D Euler rotations
 #' 
 #' @description
-#' Create 3x3 rotation matrices from Euler angles (roll, yaw, pitch).
+#' Create 3x3 rotation matrices after applying pitch-yaw-roll ("ZYX") Euler rotations.
 #'
-#' @param pitch3d numeric; rotation about the z-axis, in degrees
-#' @param yaw3d numeric; rotation about the y-axis, in degrees
-#' @param roll3d numeric; rotation about the x-axis, in degrees
+#' @param pitch numeric; rotation about the z-axis, in degrees
+#' @param yaw numeric; rotation about the y-axis, in degrees
+#' @param roll numeric; rotation about the x-axis, in degrees
 #'
 #' @returns a 3x3 rotation matrix with Euler rotations applied
 #'
@@ -19,18 +19,17 @@ NULL
 
 #' @describeIn rotate3d Create apply Euler rotations (roll, yaw, pitch)
 #' @export
-rotate3d <- function(pitch3d, yaw3d, roll3d){
-  order <- unlist(strsplit(order, ""))
+rotate3d <- function(pitch, yaw, roll){
   
-  R_total <- Rx(roll3d) %*% Ry(yaw3d) %*% Rz(pitch3d)
+  R_total <- Rx(roll) %*% Ry(yaw) %*% Rz(pitch)
   
   return(R_total)
 }
 
 #' @describeIn rotate3d Rotate about the x-axis
 #' @export
-Rx <- function(roll3d) {
-  th <- deg2rad(roll3d)
+Rx <- function(roll) {
+  th <- deg2rad(roll)
   matrix(c(1, 0, 0,
            0, cos(th), -sin(th),
            0, sin(th), cos(th)),
@@ -40,8 +39,8 @@ Rx <- function(roll3d) {
 
 #' @describeIn rotate3d Rotate about the y-axis
 #' @export
-Ry <- function(yaw3d) {
-  th <- deg2rad(yaw3d)
+Ry <- function(yaw) {
+  th <- deg2rad(yaw)
   matrix(c(cos(th), 0, sin(th),
            0, 1, 0,
            -sin(th), 0, cos(th)),
@@ -51,8 +50,8 @@ Ry <- function(yaw3d) {
 
 #' @describeIn rotate3d Rotate about the z-axis
 #' @export
-Rz <- function(pitch3d) {
-  th <- deg2rad(pitch3d)
+Rz <- function(pitch) {
+  th <- deg2rad(pitch)
   matrix(c(cos(th), -sin(th), 0,
            sin(th), cos(th), 0,
            0, 0, 1),

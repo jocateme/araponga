@@ -1,4 +1,4 @@
-#' Find candidate azimuths that can project a known 2D elevation, given known view inclination and candidate elevations
+#' Find azimuths that can project a known 2D elevation, given known view inclination and candidate elevations
 #'
 #' @param candidate.azimuths 
 #' @param candidate.elevations 
