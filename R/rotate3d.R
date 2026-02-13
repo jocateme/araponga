@@ -7,15 +7,25 @@
 #' @param yaw3d numeric; rotation about the y-axis, in degrees
 #' @param roll3d numeric; rotation about the x-axis, in degrees
 #'
-#' @returns a 3x3 rotation matrix
+#' @returns a 3x3 rotation matrix with Euler rotations applied
 #'
 #' @examples
 #' # rotate 30 degrees about x
 #' Rx(30)
 #' # rotate 45 about z, then 30 about y, then -80 about x
-#' Rx(-80) %*% Ry(30) %*% Rz(45)
+#' rotate3d(45, 30, -80)
 #' @name rotate3d
 NULL
+
+#' @describeIn rotate3d Create apply Euler rotations (roll, yaw, pitch)
+#' @export
+rotate3d <- function(pitch3d, yaw3d, roll3d){
+  order <- unlist(strsplit(order, ""))
+  
+  R_total <- Rx(roll3d) %*% Ry(yaw3d) %*% Rz(pitch3d)
+  
+  return(R_total)
+}
 
 #' @describeIn rotate3d Rotate about the x-axis
 #' @export

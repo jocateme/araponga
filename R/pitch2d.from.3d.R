@@ -1,42 +1,30 @@
-#' Calculate projected 2D pitch angle from 3D Euler rotations
+#' Calculate projected 2D elevation angle from orientations and view inclination
 #'
-#' @param pitch3d numeric; rotation about the z-axis (pitch), in degrees.
-#' @param yaw3d numeric; rotation about the y-axis (yaw), in degrees.
-#' @param roll3d numeric; rotation about the x-axis (roll), in degrees
-#' @param order character; order of rotations to be applied, a three-letter string composed of X, Y, Z. Default "ZYX" means rotate about Z by pitch3d then about (rotated) Y by yaw3d then about (twice-rotated) X by roll3d. 
-#' @param plot logical; if TRUE plots calculated 2D pitch angle.
+#' @param elevation numeric [90, -90]; vertical angle relative to horizontal plane, in degrees (up = 90, down = -90)
+#' @param azimuth numeric (-180, 180]; horizontal angle around the vertical axis, in degrees (0 = pointed right, 90 = pointed straight away, -90 = pointed straight torward, 180 = pointed left)
+#' @param view_inclination numeric [-90, 90]; angle between observer and the object, in degrees (-90 straight below, 0 = eye level, 90 = straight up)
+#' @param plot logical; if TRUE plots calculated 2D elevation angle.
 #'
-#' @returns 2D pitch angle, in degrees
+#' @returns 2D elevation angle, in degrees
 #' @export
 #'
 #' @examples
 #' # object pointed up 15 degrees
-#' pitch2d.from.3d(15, 0, 0, plot = TRUE)
+#' elevation2d.from.(15, 0, 0, plot = TRUE)
 #' # object pointed up 15 and right 30 degrees
-#' pitch2d.from.3d(15, -30, 0, plot = TRUE)
+#' elevation2d.from.(15, -30, 0, plot = TRUE)
 #' # object pointed up 15 degrees, looked at from 30 degrees below
-#' pitch2d.from.3d(15, 0, -30, plot = TRUE)
-pitch2d.from.3d <- function(pitch3d,
-                            yaw3d,
-                            roll3d,
-                            order = "ZYX",
+#' elevation2d.from.(15, 0, -30, plot = TRUE)
+elevation2d.from. <- function(elevation,
+                            azimuth,
+                            view_inclination,
                             plot = FALSE){
   
-  order <- unlist(strsplit(order, ""))
+  R_total <- rotate(elevation,
+                      azimuth,
+                      view_inclination)
   
-  if(order[1] == "Z"){R_total <- Rz(pitch3d)}
-  if(order[1] == "Y"){R_total <- Ry(yaw3d)}
-  if(order[1] == "X"){R_total <- Rx(roll3d)}
-  
-  if(order[2] == "Z"){R_total <- Rz(pitch3d) %*% R_total}
-  if(order[2] == "Y"){R_total <- Ry(yaw3d) %*% R_total}
-  if(order[2] == "X"){R_total <- Rx(roll3d) %*% R_total}
-  
-  if(order[3] == "Z"){R_total <- Rz(pitch3d) %*% R_total}
-  if(order[3] == "Y"){R_total <- Ry(yaw3d) %*% R_total}
-  if(order[3] == "X"){R_total <- Rx(roll3d) %*% R_total}
-  
-  pitch2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
+  elevation2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
   
   if(plot){
     xlim = ylim = c(-1, 1)
@@ -68,22 +56,22 @@ pitch2d.from.3d <- function(pitch3d,
     
     graphics::text(x = c(R_total[1,1], R_total[1,2], R_total[1,3]),
                    y = c(R_total[2,1], R_total[2,2], R_total[2,3]),
-                   lab = c("rotated x (3D)",
-                           "rotated y (3D)",
-                           "rotated z (3D)"),
+                   lab = c("rotated x ()",
+                           "rotated y ()",
+                           "rotated z ()"),
                    col = c("darkgreen",
                            "darkred",
                            "orange"))
     
     graphics::text(x = c(1, 0),
                    y = c(0, 1),
-                   lab = c("original x (3D)",
-                           "original y (3D)"),
+                   lab = c("original x ()",
+                           "original y ()"),
                    col = c("darkgreen",
                            "darkred"))
     
-    angles <- deg2rad(seq(from = min(0, pitch2d),
-                          to = max(0, pitch2d),
+    angles <- deg2rad(seq(from = min(0, elevation2d),
+                          to = max(0, elevation2d),
                           by = 0.01))
     r <- 0.2*min(diff(xlim), diff(ylim))
     graphics::lines(x = c(0,
@@ -93,12 +81,12 @@ pitch2d.from.3d <- function(pitch3d,
                           r*sin(angles),
                           0),
                     col = "darkblue")
-    if(pitch2d < 0){ytxt <- min(0.1*diff(ylim) * sin(angles))} else {ytxt <- max(0.1*diff(ylim) * sin(angles))}
+    if(elevation2d < 0){ytxt <- min(0.1*diff(ylim) * sin(angles))} else {ytxt <- max(0.1*diff(ylim) * sin(angles))}
     graphics::text(x = max(0.1*diff(xlim) * cos(angles)),
                    y =  ytxt,
-                   labels = paste0(round(pitch2d, 2), "\u00B0"),
+                   labels = paste0(round(elevation2d, 2), "\u00B0"),
                    col = "darkblue")
   }
   
-  return(pitch2d)
+  return(elevation2d)
 }
