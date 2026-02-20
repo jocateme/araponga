@@ -1,9 +1,9 @@
-#' Find azimuths that can project a known 2D elevation, given known view inclination and candidate elevations
+#' Find yaws that can project a known 2D pitch, given known view elevation and candidate pitches
 #'
-#' @param candidate.azimuths 
-#' @param candidate.elevations 
-#' @param elevation2d 
-#' @param view_inclination 
+#' @param candidate.yaws 
+#' @param candidate.pitches 
+#' @param pitch2d 
+#' @param view_elevation 
 #' @param plot 
 #' @param branch 
 #'
@@ -11,38 +11,38 @@
 #' @export
 #'
 #' @examples
-find.candidate.azimuths <- function(candidate.azimuths,
-                           candidate.elevations,
-                           elevation2d,
-                           view_inclination,
+find.candidate.yaws <- function(candidate.yaws,
+                           candidate.pitches,
+                           pitch2d,
+                           view_elevation,
                            plot = TRUE,
                            branch = "both"){
   # 1) Sort & unique the ranges
-  candidate.azimuths   <- sort(unique(candidate.azimuths))
-  candidate.elevations <- sort(unique(candidate.elevations))
+  candidate.yaws   <- sort(unique(candidate.yaws))
+  candidate.pitches <- sort(unique(candidate.pitches))
   
-  # 2) Convert candidate.elevations → radians (vectorized)
+  # 2) Convert candidate.pitches → radians (vectorized)
   deg2rad       <- pi / 180
-  elevation_rad   <- candidate.elevations * deg2rad
-  elevation2d_rad   <- elevation2d * deg2rad
-  view_inclination_rad    <- view_inclination  * deg2rad
+  pitch_rad   <- candidate.pitches * deg2rad
+  pitch2d_rad   <- pitch2d * deg2rad
+  view_elevation_rad    <- view_elevation  * deg2rad
   
-  # 3) Precompute K, sr, cr, R, φ (all constants w.r.t elevation loop)
-  K   <- tan(elevation2d_rad)
-  sr  <- sin(view_inclination_rad)
-  cr  <- cos(view_inclination_rad)
+  # 3) Precompute K, sr, cr, R, φ (all constants w.r.t pitch loop)
+  K   <- tan(pitch2d_rad)
+  sr  <- sin(view_elevation_rad)
+  cr  <- cos(view_elevation_rad)
   R   <- sqrt(K^2 + sr^2)             # constant
   φ   <- atan2(-sr, K)                # constant
   
-  # 4) For each elevation_rad, compute D = cr * tan(elevation_rad) and Δ = acos(D / R)
-  D_vec <- cr * tan(elevation_rad)
+  # 4) For each pitch_rad, compute D = cr * tan(pitch_rad) and Δ = acos(D / R)
+  D_vec <- cr * tan(pitch_rad)
   ratio <- D_vec / R
   # mark anything outside [-1,1] as impossible → NA
   valid <- abs(ratio) <= 1
   Δ_vec <- rep(NA_real_, length(ratio))
   Δ_vec[valid] <- acos(ratio[valid])
   
-  # 5) Compute both possible azimuth angles in radians, then convert to deg
+  # 5) Compute both possible yaw angles in radians, then convert to deg
   y_plus_rad  <- φ + Δ_vec
   y_minus_rad <- φ - Δ_vec
   rad2deg     <- 180 / pi
@@ -53,14 +53,14 @@ find.candidate.azimuths <- function(candidate.azimuths,
   y_plus_adj  <- ((y_plus_deg  + 180) %% 360) - 180
   y_minus_adj <- ((y_minus_deg + 180) %% 360) - 180
   
-  # 7) Build a data.frame of (elevation, both azimuth branches)
+  # 7) Build a data.frame of (pitch, both yaw branches)
   df_pos <- data.frame(
-    elevation = candidate.elevations,
-    azimuth   = y_plus_adj
+    pitch = candidate.pitches,
+    yaw   = y_plus_adj
   )
   df_neg <- data.frame(
-    elevation = candidate.elevations,
-    azimuth   = y_minus_adj
+    pitch = candidate.pitches,
+    yaw   = y_minus_adj
   )
   
   # 8) Depending on “branch”, stack
@@ -73,22 +73,22 @@ find.candidate.azimuths <- function(candidate.azimuths,
   }
   
   # 9) Filter out NAs and then keep only those rows whose
-  #    rounded(elevation) ∈ rounded(candidate.elevations) AND 
-  #    rounded(azimuth)   ∈ rounded(candidate.azimuths).
+  #    rounded(pitch) ∈ rounded(candidate.pitches) AND 
+  #    rounded(yaw)   ∈ rounded(candidate.yaws).
   df_full <- stats::na.omit(df_full)
-  keep <- (round(df_full$elevation) %in% round(candidate.elevations)) &
-    (round(df_full$azimuth)   %in% round(candidate.azimuths))
+  keep <- (round(df_full$pitch) %in% round(candidate.pitches)) &
+    (round(df_full$yaw)   %in% round(candidate.yaws))
   df2 <- df_full[keep, ]
   
-  # 10) Optionally plot “azimuth vs elevation” curves + the accepted points
+  # 10) Optionally plot “yaw vs pitch” curves + the accepted points
   if (isTRUE(plot)) {
-    # Create a dense grid of elevation angles
-    p_min <- max(-90, min(candidate.elevations))
-    p_max <- min( 90, max(candidate.elevations))
+    # Create a dense grid of pitch angles
+    p_min <- max(-90, min(candidate.pitches))
+    p_max <- min( 90, max(candidate.pitches))
     p_seq <- seq(from = p_min, to = p_max, length.out = 1e3)
     p_seq_rad <- p_seq * deg2rad
     
-    # For each p_seq, compute the two azimuth branches (vectorized):
+    # For each p_seq, compute the two yaw branches (vectorized):
     D_seq    <- cr * tan(p_seq_rad)
     ratio2   <- D_seq / R
     valid2   <- abs(ratio2) <= 1
@@ -102,11 +102,11 @@ find.candidate.azimuths <- function(candidate.azimuths,
     
     # Begin an empty plot
     plot(NULL,
-         xlim = range(candidate.elevations),
-         ylim = range(candidate.azimuths),
-         xlab = " elevation",
-         ylab = " azimuth",
-         main = "All possible azimuth vs elevation curves",
+         xlim = range(candidate.pitches),
+         ylim = range(candidate.yaws),
+         xlab = " pitch",
+         ylab = " yaw",
+         main = "All possible yaw vs pitch curves",
          type = "n"
     )
     
@@ -119,9 +119,9 @@ find.candidate.azimuths <- function(candidate.azimuths,
       lines(p_seq, y2_adj)
     }
     # Overlay all valid points from df2
-    points(df2$elevation, df2$azimuth, col = "blue", pch = 16)
+    points(df2$pitch, df2$yaw, col = "blue", pch = 16)
   }
   
-  # 11) Return the unique set of azimuth that survived filtering
-  return(sort(unique(df2$azimuth)))
+  # 11) Return the unique set of yaw that survived filtering
+  return(sort(unique(df2$yaw)))
 }

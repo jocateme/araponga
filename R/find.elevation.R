@@ -1,26 +1,26 @@
-#' Find the elevation that projects a known 2D elevation, given known azimuth and and view inclination
+#' Find the pitch that projects a known 2D pitch, given known yaw and and view elevation
 #'
-#' @param elevation2d
-#' @param azimuth
-#' @param view_inclination
+#' @param pitch2d
+#' @param yaw
+#' @param view_elevation
 #'
-#' @returns elevation elevation angle, in degrees
+#' @returns pitch pitch angle, in degrees
 #' @export
 #'
 #' @examples
-find.elevation <- function(elevation2d,
-                           azimuth,
-                           view_inclination){
+find.pitch <- function(pitch2d,
+                           yaw,
+                           view_elevation){
 
-  elevation2d_rad <- deg2rad(elevation2d)
-  azimuth_rad <- deg2rad(azimuth)
-  view_inclination_rad <- deg2rad(view_inclination)
+  pitch2d_rad <- deg2rad(pitch2d)
+  yaw_rad <- deg2rad(yaw)
+  view_elevation_rad <- deg2rad(view_elevation)
   
-  K  <- tan(elevation2d_rad)
-  cy <- cos(azimuth_rad)
-  sy <- sin(azimuth_rad)
-  sr <- sin(view_inclination_rad)
-  cr <- cos(view_inclination_rad)
+  K  <- tan(pitch2d_rad)
+  cy <- cos(yaw_rad)
+  sy <- sin(yaw_rad)
+  sr <- sin(view_elevation_rad)
+  cr <- cos(view_elevation_rad)
   
   p3_rad <- atan2(K*cy-sr*sy, cr)
   

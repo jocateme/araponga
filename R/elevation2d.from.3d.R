@@ -1,30 +1,30 @@
-#' Calculate projected 2D elevation angle from orientations and view inclination
+#' Calculate projected 2D pitch angle from orientations and view elevation
 #'
-#' @param elevation numeric [90, -90]; vertical angle relative to horizontal plane, in degrees (up = 90, down = -90)
-#' @param azimuth numeric (-180, 180]; horizontal angle around the vertical axis, in degrees (0 = pointed right, 90 = pointed straight away, -90 = pointed straight torward, 180 = pointed left)
-#' @param view_inclination numeric [-90, 90]; angle between observer and the object, in degrees (-90 straight below, 0 = eye level, 90 = straight up)
-#' @param plot logical; if TRUE plots calculated 2D elevation angle.
+#' @param pitch numeric [90, -90]; vertical angle relative to horizontal plane, in degrees (up = 90, down = -90)
+#' @param yaw numeric (-180, 180]; horizontal angle around the vertical axis, in degrees (0 = pointed right, 90 = pointed straight away, -90 = pointed straight torward, 180 = pointed left)
+#' @param view_elevation numeric [-90, 90]; angle between observer and the object, in degrees (-90 straight below, 0 = eye level, 90 = straight up)
+#' @param plot logical; if TRUE plots calculated 2D pitch angle.
 #'
-#' @returns 2D elevation angle, in degrees
+#' @returns 2D pitch angle, in degrees
 #' @export
 #'
 #' @examples
 #' # object pointed up 15 degrees
-#' elevation2d.from.3d(15, 0, 0, plot = TRUE)
+#' pitch2d.from.3d(15, 0, 0, plot = TRUE)
 #' # object pointed up 15 and right 30 degrees
-#' elevation2d.from.3d(15, -30, 0, plot = TRUE)
+#' pitch2d.from.3d(15, -30, 0, plot = TRUE)
 #' # object pointed up 15 degrees, looked at from 30 degrees below
-#' elevation2d.from.3d(15, 0, -30, plot = TRUE)
-elevation2d.from.3d <- function(elevation,
-                                azimuth,
-                                view_inclination,
+#' pitch2d.from.3d(15, 0, -30, plot = TRUE)
+pitch2d.from.3d <- function(pitch,
+                                yaw,
+                                view_elevation,
                                 plot = FALSE){
   
-  R_total <- rotate3d(elevation,
-                      azimuth,
-                      view_inclination)
+  R_total <- rotate3d(pitch,
+                      yaw,
+                      view_elevation)
   
-  elevation2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
+  pitch2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
   
   if(plot){
     xlim = ylim = c(-1, 1)
@@ -70,8 +70,8 @@ elevation2d.from.3d <- function(elevation,
                    col = c("darkgreen",
                            "darkred"))
     
-    angles <- deg2rad(seq(from = min(0, elevation2d),
-                          to = max(0, elevation2d),
+    angles <- deg2rad(seq(from = min(0, pitch2d),
+                          to = max(0, pitch2d),
                           by = 0.01))
     r <- 0.2*min(diff(xlim), diff(ylim))
     graphics::lines(x = c(0,
@@ -81,12 +81,12 @@ elevation2d.from.3d <- function(elevation,
                           r*sin(angles),
                           0),
                     col = "darkblue")
-    if(elevation2d < 0){ytxt <- min(0.1*diff(ylim) * sin(angles))} else {ytxt <- max(0.1*diff(ylim) * sin(angles))}
+    if(pitch2d < 0){ytxt <- min(0.1*diff(ylim) * sin(angles))} else {ytxt <- max(0.1*diff(ylim) * sin(angles))}
     graphics::text(x = max(0.1*diff(xlim) * cos(angles)),
                    y =  ytxt,
-                   labels = paste0(round(elevation2d, 2), "\u00B0"),
+                   labels = paste0(round(pitch2d, 2), "\u00B0"),
                    col = "darkblue")
   }
   
-  return(elevation2d)
+  return(pitch2d)
 }
