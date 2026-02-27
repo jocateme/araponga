@@ -10,24 +10,22 @@ deg2rad(deg)
 rad2deg(rad)
 }
 \arguments{
-\item{deg}{numeric; angle to be converted, in degrees}
+\item{deg}{Numeric vector of angles in degrees.}
 
-\item{rad}{numeric; angle to be converted, in radians}
+\item{rad}{Numeric vector of angles in radians.}
 }
 \value{
-converted angle, in radians or degrees
+A numeric vector of angles, in radians or degrees. Length matches \code{deg} or \code{rad}.
+\code{NA} values are preserved.
 }
 \description{
-Convert degrees to radians, and vice versa
+\code{deg2rad()} takes angles in degrees and returns them converted in radians.
+
+\code{rad2deg()} takes angles in radians and returns them converted in degrees.
 }
-\section{Functions}{
-\itemize{
-\item \code{deg2rad()}: Convert degrees to radians
-
-\item \code{rad2deg()}: Convert radians to degrees
-
-}}
 \examples{
-deg2rad(180)
-rad2deg(pi)
+deg2rad(c(0, 90, 180))
+
+rad2deg(c(0, pi/2, pi))
+
 }

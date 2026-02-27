@@ -1,24 +1,45 @@
 #' Convert degrees to radians, and vice versa
 #'
-#' @param deg numeric; angle to be converted, in degrees
-#' @param rad numeric; angle to be converted, in radians
+#' @description
+#' `deg2rad()` takes angles in degrees and returns them converted in radians.
+#' 
+#' `rad2deg()` takes angles in radians and returns them converted in degrees.
 #'
-#' @returns converted angle, in radians or degrees
-#'
+#' @param deg Numeric vector of angles in degrees.
+#' 
+#' @return A numeric vector of angles, in radians or degrees. Length matches `deg` or `rad`.
+#'  `NA` values are preserved.
+#'  
 #' @examples
-#' deg2rad(180)
-#' rad2deg(pi)
-#' @name deg2rad
-NULL
-
-#' @describeIn deg2rad Convert degrees to radians
+#' deg2rad(c(0, 90, 180))
+#' 
 #' @export
 deg2rad <- function(deg) {
-  return(deg*pi/180)
+  ## input checks
+  if (missing(deg) || length(deg) == 0) {
+    stop("`deg` must be a non-empty numeric vector.", call. = FALSE)
+  }
+  if (!is.numeric(deg)){
+    stop("`deg` must be numeric.", call. = FALSE)
+  }
+  deg * pi / 180
 }
 
-#' @describeIn deg2rad Convert radians to degrees
+#' @rdname deg2rad
+#' 
+#' @param rad Numeric vector of angles in radians.
+#' 
+#' @examples
+#' rad2deg(c(0, pi/2, pi))
+#' 
 #' @export
 rad2deg <- function(rad) {
-  return(rad*180/pi)
+  ## input checks
+  if (missing(rad) || length(rad) == 0) {
+    stop("`rad` must be a non-empty numeric vector.", call. = FALSE)
+  }
+  if (!is.numeric(rad)){
+    stop("`rad` must be numeric.", call. = FALSE)
+  }
+  rad * 180 / pi
 }

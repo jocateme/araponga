@@ -2,46 +2,41 @@
 % Please edit documentation in R/rotate3d.R
 \name{rotate3d}
 \alias{rotate3d}
-\alias{Rx}
-\alias{Ry}
 \alias{Rz}
-\title{Create and apply 3D Euler rotations}
+\alias{Ry}
+\alias{Rx}
+\title{Create and apply 3D rotations}
 \usage{
-rotate3d(pitch, yaw, roll)
+rotate3d(pitch = 0, yaw = 0, roll = 0)
 
-Rx(roll)
+Rz(pitch = 0)
 
-Ry(yaw)
+Ry(yaw = 0)
 
-Rz(pitch)
+Rx(roll = 0)
 }
 \arguments{
-\item{pitch}{numeric; rotation about the z-axis, in degrees}
+\item{pitch}{Numeric scalar: angle in degrees for rotation about the Z axis. Defaults to \code{0}
+(no rotation).}
 
-\item{yaw}{numeric; rotation about the y-axis, in degrees}
+\item{yaw}{Numeric scalar: angle in degrees for rotation about the Y axis. Defaults to \code{0}
+(no rotation).}
 
-\item{roll}{numeric; rotation about the x-axis, in degrees}
+\item{roll}{Numeric scalar: angle in degrees for rotation about the X axis. Defaults to \code{0}
+(no rotation).}
 }
 \value{
-a 3x3 rotation matrix with Euler rotations applied
+A numeric 3×3 matrix (class \code{matrix}).
 }
 \description{
-Create 3x3 rotation matrices after applying pitch-yaw-roll ("ZYX") Euler rotations.
+Create a 3×3 rotation matrix corresponding to sequential Euler rotations about Z, then Y,
+then X (i.e., ZYX or pitch–yaw–roll sequence).
 }
-\section{Functions}{
-\itemize{
-\item \code{rotate3d()}: Create apply Euler rotations (roll, yaw, pitch)
-
-\item \code{Rx()}: Rotate about the x-axis
-
-\item \code{Ry()}: Rotate about the y-axis
-
-\item \code{Rz()}: Rotate about the z-axis
-
-}}
 \examples{
-# rotate 30 degrees about x
-Rx(30)
 # rotate 45 about z, then 30 about y, then -80 about x
 rotate3d(45, 30, -80)
+
+# rotate 30 degrees about x
+Rx(30)
+
 }
