@@ -1,32 +1,34 @@
 #' Visualize pitch and yaw orientations
 #'
-#' Plotting helper for quick visual inspection of yaw and pitch orientations.
+#' Plotting helper for quick visual inspection of yaw (overhead view) and pitch (side view) orientations.
 #'
 #' @param angles Optional `data.frame` with numeric columns `pitches` and `yaws`; e.g., the output
 #'  of [find.yaw()] or [find.pitch()]. If provided, overrides arguments `pitches` and `yaws`.
 #' @param pitches Optional numeric vector of pitch angles, in degrees, in the interval \[-90, 90\].
 #' @param yaws Optional numeric vector of yaw angles, in degrees, in the interval (-180, 180].
+#' @param facing Character scalar: which direction the object should be facing for the pitch
+#'  plot. One of `"right"` (default) or `"left"`.
 #' @param col.pitches Color (character) or vector of colors passed to [plot()] to draw pitch
 #'  segments. Recycled to match `nrow(angles)` or `length(pitches)`.
 #' @param col.yaws Color (character) or vector of colors passed to [plot()] to draw yaw
-#'  segments. Recycled to match `nrow(angles)` or `length(pitches)`.
-#' @param facing Character scalar: which direction the object should be facing for the pitch
-#'  plot. One of `"right"` (default) or `"left"`.
+#'  segments. Recycled to match `nrow(angles)` or `length(yaws)`.
+#' @param main.pitches Character scalar: optional title for the pitch plot.
+#' @param main.yaws Character scalar: optional title for the yaw plot.
 #'  
 #' @return Invisibly, a `data.frame` with columns:
-#'  \describe{
-#'    \item{which}{factor: "pitch" or "yaw"}
-#'    \item{angle}{numeric: original angle, in degrees}
-#'    \item{x}{numeric: x coordinate plotted}
-#'    \item{y}{numeric: y coordinate plotted}
+#' \describe{
+#'   \item{which}{factor: "pitch" or "yaw".}
+#'   \item{angle}{numeric: original angle, in degrees.}
+#'   \item{x}{numeric: x coordinate plotted.}
+#'   \item{y}{numeric: y coordinate plotted.}
 #'  }
 #'  
 #' @examples
-#' # pitches that projects to 10° seen from 15° below
+#' # pitches that project to 10° seen from 15° below
 #' angles <- find.pitch(10, view_elevation = -15)
 #' visualize.angles(angles)
 #' 
-#' # yaws that projects to 15° seen from 45° below, given range of candidate pitches 10 to 20°
+#' # yaws that project to 15° seen from 45° below, given range of candidate pitches 10 to 20°
 #' angles <- find.yaw(pitch2d = 15, view_elevation = -45, pitches = seq(10, 20, 0.1))
 #' visualize.angles(angles)
 #' 
@@ -38,9 +40,11 @@
 visualize.angles <- function(angles = NULL,
                              pitches = NULL,
                              yaws = NULL,
+                             facing = c("right", "left"),
                              col.pitches = "cadetblue",
                              col.yaws = "salmon",
-                             facing = c("right", "left")){
+                             main.pitches = NULL,
+                             main.yaws = NULL){
   
   if(!is.null(angles)){
     if(!is.data.frame(angles) | !"yaws" %in% colnames(angles) | !"pitches" %in% colnames(angles)){
@@ -72,9 +76,11 @@ visualize.angles <- function(angles = NULL,
     stop("`pitches` must satisfy -90 <= pitch <= 90 degrees.", call. = FALSE)
   }
   
-  old_par <- graphics::par(no.readonly = TRUE)
-  on.exit(graphics::par(old_par), add = TRUE)
-  graphics::par(mfrow = c(1, sum(!is.null(yaws), !is.null(pitches))))
+  if(!is.null(yaws) & !is.null(pitches)){
+    old_par <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(mfrow = c(1, 2))
+  }
   
   df <- NULL
   
@@ -82,6 +88,8 @@ visualize.angles <- function(angles = NULL,
     
     df.p <- data.frame(which = "pitch", angle = pitches)
     pitches <- deg2rad(pitches)
+    
+    if(is.null(main.pitches)) main.pitches <- "pitch\nside view"
     
     if(facing == "right"){
       theta <- seq(-90, 90, length.out = 200) * pi/180
@@ -108,7 +116,7 @@ visualize.angles <- function(angles = NULL,
                    xaxt = "n",
                    yaxt = "n",
                    col = "gray50",
-                   main = "pitch")
+                   main = main.pitches)
     graphics::segments(0, 0,
                        1*adj, 0,
                        lty = 2,
@@ -136,6 +144,8 @@ visualize.angles <- function(angles = NULL,
     df.y$y = sin(yaws)
     df <- rbind(df, df.y)
     
+    if(is.null(main.yaws)) main.yaws <- "yaw\noverhead view"
+    
     theta <- seq(0, 2*pi, length.out = 400)
     graphics::plot(x = 0 + 1 * cos(theta),
                    y = 0 + 1 * sin(theta),
@@ -147,7 +157,7 @@ visualize.angles <- function(angles = NULL,
                    xaxt = "n",
                    yaxt = "n",
                    col = "gray50",
-                   main = "yaw")
+                   main = main.yaws)
     graphics::segments(-1, 0,
                        1, 0,
                        lty = 2,

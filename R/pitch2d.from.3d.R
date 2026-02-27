@@ -2,7 +2,7 @@
 #'
 #' @description
 #' Compute the 2D pitch produced by 3D orientations (pitch, yaw) when viewed from a specified
-#' view elevation.
+#' elevation.
 #'
 #' @param pitch Numeric scalar: vertical angle relative to horizontal plane, in degrees, in the
 #'  interval \[-90, 90\]. Convention: `90` = pointed up, `0` = horizontally aligned, `-90` = pointed
@@ -19,6 +19,11 @@
 #' @returns Numeric scalar: 2D pitch angle, in degrees, in the interval (-180°, 180°].
 #'  Convention: `0` points right, `90` points up, `-90` points down, `180` points left.
 #'
+#' @details
+#' The function constructs the full rotation matrix \eqn{R} using
+#' [rotate3d](`pitch`, `yaw`, `view_elevation`) and computes the projected 2D pitch \eqn{p_{2}} as
+#' \deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big)}
+#' 
 #' @examples
 #' # object pointed up 15 degrees
 #' pitch2d.from.3d(15, 0, 0, plot = TRUE)

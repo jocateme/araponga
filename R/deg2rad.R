@@ -8,7 +8,6 @@
 #' @param deg Numeric vector of angles in degrees.
 #' 
 #' @return A numeric vector of angles, in radians or degrees. Length matches `deg` or `rad`.
-#'  `NA` values are preserved.
 #'  
 #' @examples
 #' deg2rad(c(0, 90, 180))

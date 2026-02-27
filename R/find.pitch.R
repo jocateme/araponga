@@ -12,7 +12,7 @@
 #' @param yaws Optional numeric vector of one known or multiple candidate yaw angles, in degrees, in the
 #'  interval (-180, 180]. Convention: `0` = pointed right, `90` = pointed straight away,
 #'  `-90` = pointed straight toward, `180` = pointed left. If `NULL` (default), a grid
-#'  comprehending all possible yaws (`seq(-179.99, 180, 0.1)`) is used.
+#'  comprehending all possible yaws (`seq(-179.99, 180, 0.01)`) is used.
 #' @param pitches Optional numeric vector of candidate 3D pitches used to filter the results,
 #'  in degrees, in the interval \[-90, 90\]. Convention: `90` = pointed up, `0` = horizontally
 #'  aligned, `-90` = pointed down. If `NULL` (default) all computed pitches are returned.
@@ -25,28 +25,33 @@
 #'
 #' @returns A `data.frame` with two columns:
 #' \describe{
-#'   \item{yaws}{numeric: the (input) yaw values, in degrees, retained after filtering}
-#'   \item{pitches}{numeric: the corresponding computed 3D pitches, in degrees,
-#'   from -90 (pointed down), through 0 (horizontally aligned), to 90 (pointed up)}
+#'   \item{yaws}{numeric: the (input) yaw values retained after filtering, in degrees.}
+#'   \item{pitches}{numeric: the corresponding computed 3D pitches, in degrees. Convention: `90` = pointed up, `0` = horizontally
+#'  aligned, `-90` = pointed down.}
 #' }
 #' If no (yaw, pitch) matches are found the returned data.frame has zero rows.
 #' 
 #' @details
-#' In practice [find.pitch()] finds which solutions of [pitch2d.from.3d()] reproduce `pitch2d`.
+#' The function [find.pitch()] in practice finds which solutions of [pitch2d.from.3d()] reproduce `pitch2d`.
 #' 
-#' Computationally, [pitch2d.from.3d()] constructs the full rotation
-#' matrix \eqn{R} using [rotate3d()] and computes the projected 2D pitch \eqn{p_{2}} as
-#' \deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big)}
+#' More specifically, [pitch2d.from.3d()] constructs the full rotation matrix \eqn{R} using
+#' [rotate3d()] and computes the projected 2D pitch \eqn{p_{2}} as
+#' \deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big),}
+#' 
+#' where:
+#' \deqn{R_{2,1} = \sin(p_{3})\cos(r_{3}) + \sin(r_{3})\sin(y_{3})\cos(p_{3}),}
+#' \deqn{R_{1,1} = \cos(p_{3})\cos(y_{3}),}
+#' 
+#' \eqn{r_{3}} is `view_elevation`, \eqn{y_{3}} is a candidate/known `yaw`, and \eqn{p_{3}} is
+#' the 3D pitch we are interested in.
 #'
-#' By inversing this relation, we find which 3D pitch (\eqn{p_{3}}) projects `pitch2d`
-#' (\eqn{p_{2}}) from `view_elevation` (\eqn{r_{3}}) given a candidate/known `yaw`
-#' (\eqn{y_{3}}):
+#' We find \eqn{p_{3}} by inverting this relation:
 #' \deqn{p_{3} = \operatorname{atan2}(\tan(p_{2})\cos(y_{3}) - \sin(r_{3})\sin(y_{3}), \cos(r_{3}))}
 #' 
-#' This expression is equivalent to the code inside [find.pitch()].
+#' This expression is implemented inside [find.pitch()].
 #'
 #' @examples
-#' # pitches that projects to 10° seen from 15° below
+#' # pitches that project to 10° seen from 15° below
 #' find.pitch(10, view_elevation = -15, plot = TRUE)
 #' 
 #' # similar to above, but now given known yaw of 30°
@@ -109,7 +114,7 @@ find.pitch <- function(pitch2d,
   
   if(is.null(yaws)){
     null.yaw <- TRUE
-    yaws <- seq(-179.99, 180, 0.1)
+    yaws <- seq(-179.99, 180, 0.01)
   }
   yaws <- sort(unique(as.numeric(yaws)))
   if(!is.null(pitches)) pitches <- sort(unique(as.numeric(pitches)))
@@ -136,10 +141,13 @@ find.pitch <- function(pitch2d,
     (round(df$yaws, round2keep) %in% round(yaws, round2keep))
   df <- df[keep, ]
   
+  # package convention
+  df$yaws[df$yaws == -180] <- 180
+  
   ## plotting
   if(plot){
     
-    yaws_plot <- deg2rad(seq(-180, 180, 0.1))
+    yaws_plot <- deg2rad(seq(-179.9, 180, 0.1))
     graphics::plot(y = rad2deg(atan2(tan(pitch2d_rad) * cos(yaws_plot) -
                                        sin(view_elevation_rad) * sin(yaws_plot),
                                      cos(view_elevation_rad))),

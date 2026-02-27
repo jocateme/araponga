@@ -12,8 +12,8 @@ summarize.yaws(yaws)
 \value{
 A named \code{list} with components:
 \describe{
-\item{from}{numeric scalar: interval start, in degrees.}
-\item{to}{numeric scalar: inverval end, in degrees.}
+\item{from}{numeric scalar: interval start (more counterclockwise endpoint), in degrees.}
+\item{to}{numeric scalar: inverval end (more clockwise endpoint), in degrees.}
 \item{width}{numeric scalar: angular width of the shortest enclosing arc, in degrees.}
 \item{wrap}{logical: \code{TRUE} if the interval crosses the -180/180 boundary.}
 }
@@ -28,6 +28,10 @@ summarize.yaws(-60:60)
 
 # a wrapping interval (points around ±180)
 summarize.yaws(c(-175:-170, 171:179))
+
+# output from find.yaw()
+yaws <- find.yaw(pitch2d = 15, view_elevation = -45, pitches = seq(10, 20, 0.1))$yaws
+summarize.yaws(yaws)
 
 # singleton
 summarize.yaws(30)

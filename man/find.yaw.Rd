@@ -24,7 +24,7 @@ interval [-90, 90]. Convention: \code{-90} = seen from straight below, \code{0} 
 \item{pitches}{Optional numeric vector of one known or multiple candidate pitch angles, in
 degrees, in the interval [-90, 90]. Convention: \code{90} = pointed up, \code{0} = horizontally
 aligned, \code{-90} = pointed down. If \code{NULL} (default), a grid comprehending all possible
-pitches (\code{seq(-90, 90, 0.1)}) is used.}
+pitches (\code{seq(-90, 90, 0.01)}) is used.}
 
 \item{yaws}{Optional numeric vector of candidate 3D yaws used to filter the
 results, in degrees, in the interval (-180, 180]. Convention: \code{0} = pointed right,
@@ -52,22 +52,27 @@ Given a measured 2D pitch and one or more candidate pitch orientations, compute 
 corresponding yaw angles that would produce that projected 2D pitch at a given view elevation.
 }
 \details{
-In practice \code{\link[=find.yaw]{find.yaw()}} finds which solutions of \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} reproduce \code{pitch2d}.
+The function \code{\link[=find.pitch]{find.pitch()}} in practice finds which solutions of \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} reproduce \code{pitch2d}.
 
-Computationally, \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} constructs the full rotation matrix \eqn{R} using
+More specifically, \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} constructs the full rotation matrix \eqn{R} using
 \code{\link[=rotate3d]{rotate3d()}} and computes the projected 2D pitch \eqn{p_{2}} as
-\deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big)}
+\deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big),}
 
-By inversing this relation, we find both yaws (\eqn{y_{3}}) that project \code{pitch2d}
-(\eqn{p_{2}}) from \code{view_elevation} (\eqn{r_{3}}) given a candidate/known \code{pitch}
-(\eqn{p_{3}}):
+where:
+\deqn{R_{2,1} = \sin(p_{3})\cos(r_{3}) + \sin(r_{3})\sin(y_{3})\cos(p_{3}),}
+\deqn{R_{1,1} = \cos(p_{3})\cos(y_{3}),}
+
+\eqn{r_{3}} is \code{view_elevation}, \eqn{p_{3}} is a candidate/known 3D \code{pitch}, and \eqn{y_{3}}
+is the yaw we are interested in.
+
+We find \eqn{y_{3}} by inverting this relation:
 \deqn{\phi=\operatorname{atan2}(-\sin(r_{3}),\,\tan(p_{2}))}
 \deqn{y_{3} = \phi \pm \arccos\!\left(\dfrac{\cos(r_{3})\;\tan(p_{3})}{\sqrt{\tan(p_{2})^{2}+\sin(r_{3})^{2}}}\right)}
 
-This expression is equivalent to the code inside \code{\link[=find.yaw]{find.yaw()}}.
+This expression is implemented inside \code{\link[=find.yaw]{find.yaw()}}.
 }
 \examples{
-# yaws that projects to 10° seen from 15° below
+# yaws that project to 10° seen from 15° below
 find.yaw(pitch2d = 10, view_elevation = -15, plot = TRUE)
 
 # similar to above, but now given known pitch of 5°

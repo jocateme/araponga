@@ -16,7 +16,6 @@ rad2deg(rad)
 }
 \value{
 A numeric vector of angles, in radians or degrees. Length matches \code{deg} or \code{rad}.
-\code{NA} values are preserved.
 }
 \description{
 \code{deg2rad()} takes angles in degrees and returns them converted in radians.

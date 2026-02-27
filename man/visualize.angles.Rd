@@ -8,9 +8,11 @@ visualize.angles(
   angles = NULL,
   pitches = NULL,
   yaws = NULL,
+  facing = c("right", "left"),
   col.pitches = "cadetblue",
   col.yaws = "salmon",
-  facing = c("right", "left")
+  main.pitches = NULL,
+  main.yaws = NULL
 )
 }
 \arguments{
@@ -21,33 +23,37 @@ of \code{\link[=find.yaw]{find.yaw()}} or \code{\link[=find.pitch]{find.pitch()}
 
 \item{yaws}{Optional numeric vector of yaw angles, in degrees, in the interval (-180, 180].}
 
+\item{facing}{Character scalar: which direction the object should be facing for the pitch
+plot. One of \code{"right"} (default) or \code{"left"}.}
+
 \item{col.pitches}{Color (character) or vector of colors passed to \code{\link[=plot]{plot()}} to draw pitch
 segments. Recycled to match \code{nrow(angles)} or \code{length(pitches)}.}
 
 \item{col.yaws}{Color (character) or vector of colors passed to \code{\link[=plot]{plot()}} to draw yaw
-segments. Recycled to match \code{nrow(angles)} or \code{length(pitches)}.}
+segments. Recycled to match \code{nrow(angles)} or \code{length(yaws)}.}
 
-\item{facing}{Character scalar: which direction the object should be facing for the pitch
-plot. One of \code{"right"} (default) or \code{"left"}.}
+\item{main.pitches}{Character scalar: optional title for the pitch plot.}
+
+\item{main.yaws}{Character scalar: optional title for the yaw plot.}
 }
 \value{
 Invisibly, a \code{data.frame} with columns:
 \describe{
-\item{which}{factor: "pitch" or "yaw"}
-\item{angle}{numeric: original angle, in degrees}
-\item{x}{numeric: x coordinate plotted}
-\item{y}{numeric: y coordinate plotted}
+\item{which}{factor: "pitch" or "yaw".}
+\item{angle}{numeric: original angle, in degrees.}
+\item{x}{numeric: x coordinate plotted.}
+\item{y}{numeric: y coordinate plotted.}
 }
 }
 \description{
-Plotting helper for quick visual inspection of yaw and pitch orientations.
+Plotting helper for quick visual inspection of yaw (overhead view) and pitch (side view) orientations.
 }
 \examples{
-# pitches that projects to 10° seen from 15° below
+# pitches that project to 10° seen from 15° below
 angles <- find.pitch(10, view_elevation = -15)
 visualize.angles(angles)
 
-# yaws that projects to 15° seen from 45° below, given range of candidate pitches 10 to 20°
+# yaws that project to 15° seen from 45° below, given range of candidate pitches 10 to 20°
 angles <- find.yaw(pitch2d = 15, view_elevation = -45, pitches = seq(10, 20, 0.1))
 visualize.angles(angles)
 

@@ -28,7 +28,12 @@ Convention: \code{0} points right, \code{90} points up, \code{-90} points down, 
 }
 \description{
 Compute the 2D pitch produced by 3D orientations (pitch, yaw) when viewed from a specified
-view elevation.
+elevation.
+}
+\details{
+The function constructs the full rotation matrix \eqn{R} using
+\link{rotate3d}(\code{pitch}, \code{yaw}, \code{view_elevation}) and computes the projected 2D pitch \eqn{p_{2}} as
+\deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big)}
 }
 \examples{
 # object pointed up 15 degrees
