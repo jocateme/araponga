@@ -79,22 +79,26 @@ pitch2d.from.xy <- function(x_tip,
   
   ## plot (scalar only)
   if(plot){
-    xlim = c(x_base - abs(x_tip - x_base) - 0.5, x_base + abs(x_tip - x_base) + 0.5)
-    ylim = c(y_base - abs(y_tip - y_base) - 0.5, y_base + abs(y_tip - y_base) + 0.5)
+    half <- max(abs(dx), abs(dy)) + 0.5
+    xlim = c(x_base - half, x_base + half)
+    ylim = c(y_base - half, y_base + half)
     graphics::plot(x = c(x_tip, x_base),
                    y = c(y_tip, y_base),
                    type = "l",
                    xlab = "x",
                    ylab = "y",
                    xlim = xlim,
-                   ylim = ylim)
+                   ylim = ylim,
+                   asp = 1)
     graphics::lines(x = c(x_base, max(xlim)),
                     y = c(y_base, y_base),
                     lty = 2)
+    graphics::abline(h = y_base,
+                     lty = 2)
     angles <- deg2rad(seq(from = min(0, pitch2d),
                           to = max(0, pitch2d),
                           by = 0.01))
-    r <- 0.2*min(diff(xlim), diff(ylim))
+    r <- 0.2*half
     graphics::lines(x = c(x_base,
                           x_base + r*cos(angles),
                           x_base),
@@ -115,6 +119,13 @@ pitch2d.from.xy <- function(x_tip,
                      y = c(y_base, y_tip),
                      col = c("darkgreen", "darkred"),
                      pch = 16)
+  }
+  
+  if(n == 1){
+    attr(pitch2d, "xy") <- list(x_tip = x_tip,
+                                y_tip = y_tip,
+                                x_base = x_base,
+                                y_base = y_base)
   }
   
   return(pitch2d)

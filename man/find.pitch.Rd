@@ -14,8 +14,8 @@ find.pitch(
 )
 }
 \arguments{
-\item{pitch2d}{Numeric scalar: observed 2D pitch, in degrees, in the interval (-180, 180];
-e.g., from \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.}
+\item{pitch2d}{Numeric scalar: observed 2D pitch as returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, in degrees in
+the interval (-180, 180]}
 
 \item{view_elevation}{Numeric scalar: angle between camera and object, in degrees, in the
 interval [-90, 90]. Convention: \code{-90} = seen from straight below, \code{0} = eye level,

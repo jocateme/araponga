@@ -71,7 +71,8 @@ pitch2d.from.3d <- function(pitch,
                    yaxt = "n",
                    xlim = xlim,
                    ylim = ylim,
-                   col = "darkgreen")
+                   col = "darkgreen",
+                   las = 1)
     graphics::lines(x = c(R_total[1,2], 0),
                     y = c(R_total[2,2], 0),
                     col = "darkred")

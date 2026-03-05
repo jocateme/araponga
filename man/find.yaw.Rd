@@ -14,8 +14,8 @@ find.yaw(
 )
 }
 \arguments{
-\item{pitch2d}{Numeric scalar: observed 2D pitch, in degrees, in the interval (-180, 180];
-e.g., from \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.}
+\item{pitch2d}{Numeric scalar: observed 2D pitch as returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, in degrees in
+the interval (-180, 180]}
 
 \item{view_elevation}{Numeric scalar: angle between camera and object, in degrees, in the
 interval [-90, 90]. Convention: \code{-90} = seen from straight below, \code{0} = eye level,
@@ -35,8 +35,9 @@ results, in degrees, in the interval (-180, 180]. Convention: \code{0} = pointed
 equality between computed and candidate pitches/yaws. Default is \code{0}, i.e., equality is
 checked after rounding computed and candidate values to integers.}
 
-\item{plot}{Logical scalar. If \code{TRUE}, the function draws a yaw-by-pitch plot with the
-returned combinations.}
+\item{plot}{Logical scalar. If \code{TRUE}, the function plots the full continuous yaw-by-pitch
+curves, overlays lines for the selected \code{yaws}/\code{pitches}, and points for the returned
+combinations.}
 }
 \value{
 A \code{data.frame} with two columns:

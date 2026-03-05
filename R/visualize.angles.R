@@ -118,18 +118,18 @@ visualize.angles <- function(angles = NULL,
                    col = "gray50",
                    main = main.pitches)
     graphics::segments(0, 0,
-                       1*adj, 0,
-                       lty = 2,
-                       col = "gray")
-    graphics::segments(0, -1,
-                       0, 1,
-                       lty = 2,
-                       col = "gray")
-    graphics::segments(0, 0,
                        0 + 1 * cos(pitches),
                        0 + 1 * sin(pitches),
                        col = col.pitches,
                        lwd = 0.5)
+    graphics::segments(0, 0,
+                       1*adj, 0,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::segments(0, -1,
+                       0, 1,
+                       lty = 2,
+                       col = "#BEBEBE80")
     graphics::mtext(text = c("-90\u00B0", "0\u00B0 (horizon)", "90\u00B0"),
                     side = sides,
                     at = 0)
@@ -158,6 +158,11 @@ visualize.angles <- function(angles = NULL,
                    yaxt = "n",
                    col = "gray50",
                    main = main.yaws)
+    graphics::segments(0, 0,
+                       0 + 1 * cos(yaws),
+                       0 + 1 * sin(yaws),
+                       col = col.yaws,
+                       lwd = 0.5)
     graphics::segments(-1, 0,
                        1, 0,
                        lty = 2,
@@ -166,11 +171,6 @@ visualize.angles <- function(angles = NULL,
                        0, 1,
                        lty = 2,
                        col = "gray")
-    graphics::segments(0, 0,
-                       0 + 1 * cos(yaws),
-                       0 + 1 * sin(yaws),
-                       col = col.yaws,
-                       lwd = 0.5)
     graphics::mtext(text = c("-90\u00B0 (camera)", "180\u00B0", "90\u00B0", "0\u00B0"),
                     side = 1:4)
     

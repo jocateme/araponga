@@ -34,7 +34,7 @@ Given two sets of candidate yaw angles, \code{\link[=trim.yaws]{trim.yaws()}} re
 do not have at least one partner in the other set that is at least \code{min_sep} and up to
 \code{max_sep} clockwise (for \code{ccw_yaws} set) or counterclockwise (for \code{cw_yaws}) from it. In
 other words, each retained \code{ccw_yaws} angle will be ≥ \code{min_sep} and ≤ \code{max_sep}
-counterclockwise of at least one \code{cw_yaws} angle. Conversely, each retained \code{cw_yaws} angle
+counterclockwise of at least one \code{cw_yaws} angle. Analogously, each retained \code{cw_yaws} angle
 will be ≥ \code{min_sep} and ≤ \code{max_sep} clockwise of at least one \code{ccw_yaws} angle.
 }
 \examples{

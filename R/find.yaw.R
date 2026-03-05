@@ -3,8 +3,8 @@
 #' Given a measured 2D pitch and one or more candidate pitch orientations, compute the
 #' corresponding yaw angles that would produce that projected 2D pitch at a given view elevation.
 #'
-#' @param pitch2d Numeric scalar: observed 2D pitch, in degrees, in the interval (-180, 180];
-#'  e.g., from [pitch2d.from.xy()].
+#' @param pitch2d Numeric scalar: observed 2D pitch as returned by [pitch2d.from.xy()], in degrees in
+#'  the interval (-180, 180]
 #' @param view_elevation Numeric scalar: angle between camera and object, in degrees, in the
 #'  interval \[-90, 90\]. Convention: `-90` = seen from straight below, `0` = eye level,
 #'  `90` = seen from straight above.
@@ -19,8 +19,9 @@
 #' @param round2keep Integer scalar: number of decimal places to pass to [round()] when comparing
 #'  equality between computed and candidate pitches/yaws. Default is `0`, i.e., equality is
 #'  checked after rounding computed and candidate values to integers.
-#' @param plot Logical scalar. If `TRUE`, the function draws a yaw-by-pitch plot with the
-#'  returned combinations.
+#' @param plot Logical scalar. If `TRUE`, the function plots the full continuous yaw-by-pitch
+#'  curves, overlays lines for the selected `yaws`/`pitches`, and points for the returned
+#'  combinations.
 #'
 #' @returns A `data.frame` with two columns:
 #' \describe{
@@ -100,61 +101,113 @@ find.yaw <- function(pitch2d,
   if(is.null(pitches)){
     null.pitch <- TRUE
     pitches <- seq(-90, 90, 0.01)
+  } else {
+    pitches <- sort(unique(pitches))
   }
-  pitches <- sort(unique(pitches))
-  if(!is.null(yaws)) yaws <- sort(unique(as.numeric(yaws)))
+  if(is.null(yaws)){
+    null.yaw <- TRUE
+    yaws <- seq(-179.99, 180, 0.01)
+  } else {
+    yaws <- sort(unique(as.numeric(yaws)))
+  }
   
   pitch2d_rad <- deg2rad(pitch2d)
   pitches_rad <- deg2rad(pitches)
   view_elevation_rad <- deg2rad(view_elevation)
   
   ## precompute helpers
-  K <- tan(pitch2d_rad)
-  sr <- sin(view_elevation_rad)
-  cr <- cos(view_elevation_rad)
-  R <- sqrt(K^2 + sr^2)
-  phi <- atan2(-sr, K)
-  d_vec <- cr * tan(pitches_rad)
-  ratio <- d_vec / R
-  # ratio must be in [-1, 1] to get real acos - flagging for exclusion
-  valid <- abs(ratio) <= 1
-  d_vec <- rep(NA_real_, length(ratio))
-  d_vec[valid] <- acos(ratio[valid])
+  get.y3plus <- function(pitch2d_rad, view_elevation_rad, pitches_rad){
+    K <- tan(pitch2d_rad)
+    sr <- sin(view_elevation_rad)
+    cr <- cos(view_elevation_rad)
+    R <- sqrt(K^2 + sr^2)
+    phi <- atan2(-sr, K)
+    d_vec <- cr * tan(pitches_rad)
+    ratio <- d_vec / R
+    # ratio must be in [-1, 1] to get real acos - flagging for exclusion
+    valid <- abs(ratio) <= 1
+    d_vec <- rep(NA_real_, length(ratio))
+    d_vec[valid] <- acos(ratio[valid])
+    
+    y_plus <- rad2deg(phi + d_vec)
+    y_plus <- ((y_plus  + 180) %% 360) - 180
+    y_plus
+    
+  }
+  get.y3minus <- function(pitch2d_rad, view_elevation_rad, pitches_rad){
+    K <- tan(pitch2d_rad)
+    sr <- sin(view_elevation_rad)
+    cr <- cos(view_elevation_rad)
+    R <- sqrt(K^2 + sr^2)
+    phi <- atan2(-sr, K)
+    d_vec <- cr * tan(pitches_rad)
+    ratio <- d_vec / R
+    # ratio must be in [-1, 1] to get real acos - flagging for exclusion
+    valid <- abs(ratio) <= 1
+    d_vec <- rep(NA_real_, length(ratio))
+    d_vec[valid] <- acos(ratio[valid])
+    
+    y_minus <- rad2deg(phi - d_vec)
+    y_minus <- ((y_minus  + 180) %% 360) - 180
+    y_minus
+    
+  }
   
-  y_plus <- rad2deg(phi + d_vec)
-  y_minus <- rad2deg(phi - d_vec)
-  
-  y_plus <- ((y_plus  + 180) %% 360) - 180
-  y_minus <- ((y_minus  + 180) %% 360) - 180
+  y3 <- c(get.y3plus(pitch2d_rad, view_elevation_rad, pitches_rad),
+          get.y3minus(pitch2d_rad, view_elevation_rad, pitches_rad))
   
   df <- data.frame(
     pitches = c(pitches, pitches),
-    yaws = c(y_minus, y_plus)
+    yaws = y3
   )
   
   df <- df[!is.na(df$yaws),]
   
   ## filtering
-  if(is.null(yaws)){
-    null.yaw <- TRUE
-    yaws <- df$yaws
+  if(!null.yaw){
+    keep <- round(df$yaws, round2keep) %in% round(yaws, round2keep)
+    df <- df[keep,]
   }
-  keep <- (round(df$pitches, round2keep) %in% round(pitches, round2keep)) &
-    (round(df$yaws, round2keep) %in% round(yaws, round2keep))
-  df <- df[keep, ]
   
   # package convention
   df$yaws[df$yaws == -180] <- 180
   
+  attr(df, "meta") <- list(find = "yaws",
+                           pitch2d = pitch2d,
+                           view_elevation = view_elevation,
+                           pitches = pitches,
+                           yaws = yaws,
+                           round2keep = round2keep)
+  
   ## plotting
   if(plot){
     
-    graphics::plot(df,
-         type = "p",
-         xlab = "pitch (\u00B0)",
-         ylab = "yaw (\u00B0)",
-         pch = 16,
-         col = "darkred")
+    pitches_plot <- deg2rad(seq(-90, 90, 0.1))
+    yaws_minus_plot <- get.y3minus(pitch2d_rad, view_elevation_rad, pitches_plot)
+    yaws_plus_plot <- get.y3plus(pitch2d_rad, view_elevation_rad, pitches_plot)
+    pitches_plot <- rad2deg(pitches_plot)
+    ylim = range(yaws_minus_plot, yaws_plus_plot, na.rm = TRUE)
+    xlim = range(pitches_plot)
+    graphics::plot(NA,
+                   xlab = "pitch (\u00B0)",
+                   ylab = "yaw (\u00B0)",
+                   xlim = xlim,
+                   ylim = ylim)
+    if(!null.pitch){
+      graphics::abline(v = unique(round(pitches)),
+                       col = grDevices::adjustcolor("cadetblue", alpha.f = 0.3))
+    }
+    if(!null.yaw){
+      graphics::abline(h = unique(round(yaws)),
+                       col = grDevices::adjustcolor("salmon", alpha.f = 0.3))
+    }
+    graphics::lines(y = yaws_plus_plot,
+                    x = pitches_plot)
+    graphics::lines(y = yaws_minus_plot,
+                    x = pitches_plot)
+    graphics::points(df,
+                     col = "darkred",
+                     pch = 16)
     
   }
   

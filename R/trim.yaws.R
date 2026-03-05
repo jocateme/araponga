@@ -5,7 +5,7 @@
 #' do not have at least one partner in the other set that is at least `min_sep` and up to
 #' `max_sep` clockwise (for `ccw_yaws` set) or counterclockwise (for `cw_yaws`) from it. In
 #' other words, each retained `ccw_yaws` angle will be ≥ `min_sep` and ≤ `max_sep`
-#' counterclockwise of at least one `cw_yaws` angle. Conversely, each retained `cw_yaws` angle
+#' counterclockwise of at least one `cw_yaws` angle. Analogously, each retained `cw_yaws` angle
 #' will be ≥ `min_sep` and ≤ `max_sep` clockwise of at least one `ccw_yaws` angle.
 #'
 #' @param ccw_yaws Numeric vector: candidate yaw angles known/expected to be
