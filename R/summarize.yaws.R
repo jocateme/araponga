@@ -99,7 +99,8 @@ summarize.yaws <- function(yaws,
     graphics::lines(x = 0 + 1.05 * cos(yaws_plot),
                     y = 0 + 1.05 * sin(yaws_plot),
                     type = "l",
-                    col = "darkred")
+                    col = "darkred",
+                    lwd = 1.5)
     
   }
   

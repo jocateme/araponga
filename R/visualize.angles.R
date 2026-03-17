@@ -26,18 +26,18 @@
 #' @examples
 #' # pitches that project to 10° seen from 15° below
 #' angles <- find.pitch(10, view_elevation = -15)
-#' visualize.angles(angles)
+#' plot.angles(angles)
 #' 
 #' # yaws that project to 15° seen from 45° below, given range of candidate pitches 10 to 20°
 #' angles <- find.yaw(pitch2d = 15, view_elevation = -45, pitches = seq(10, 20, 0.1))
-#' visualize.angles(angles)
+#' plot.angles(angles)
 #' 
 #' # call with explicit vectors
-#' visualize.angles(pitches = -30:-20)
-#' visualize.angles(yaws = 70:80)
+#' plot.angles(pitches = -30:-20)
+#' plot.angles(yaws = 70:80)
 #' 
 #' @export
-visualize.angles <- function(angles = NULL,
+plot.angles <- function(angles = NULL,
                              pitches = NULL,
                              yaws = NULL,
                              facing = c("right", "left"),
@@ -47,11 +47,11 @@ visualize.angles <- function(angles = NULL,
                              main.yaws = NULL){
   
   if(!is.null(angles)){
-    if(!is.data.frame(angles) | !"yaws" %in% colnames(angles) | !"pitches" %in% colnames(angles)){
-      stop("`angles` must be a dataframe with columns `yaws` and `pitches`", call. = FALSE)
+    if(!is.data.frame(angles) | !"yaw" %in% colnames(angles) | !"pitch" %in% colnames(angles)){
+      stop("`angles` must be a dataframe with columns `yaw` and `pitch`", call. = FALSE)
     }
-    yaws <- angles$yaws
-    pitches <- angles$pitches
+    yaws <- angles$yaw
+    pitches <- angles$pitch
   }
   
   facing <- match.arg(facing)
@@ -72,9 +72,9 @@ visualize.angles <- function(angles = NULL,
   if(any(yaws <= -180 | yaws > 180)){
     stop("`yaws` must satisfy -180 < yaw <= 180 degrees.", call. = FALSE)
   }
-  if(any(pitches < -90 | pitches > 90)){
-    stop("`pitches` must satisfy -90 <= pitch <= 90 degrees.", call. = FALSE)
-  }
+  # if(any(pitches < -90 | pitches > 90)){
+  #   stop("`pitches` must satisfy -90 <= pitch <= 90 degrees.", call. = FALSE)
+  # }
   
   if(!is.null(yaws) & !is.null(pitches)){
     old_par <- graphics::par(no.readonly = TRUE)
