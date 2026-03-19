@@ -13,7 +13,7 @@ of an object knowing the 2D coordinates of two landmarks and the
 
 ## Installation
 
-You can install the development version of araponga from
+You can install the development version of `araponga` from
 [GitHub](https://github.com/) with:
 
 ``` r
