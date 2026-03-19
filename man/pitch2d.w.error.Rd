@@ -33,5 +33,5 @@ Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval 
 value returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.
 }
 \seealso{
-\code{\link[=find.pitch]{find.pitch()}}, \code{\link[=find.yaw]{find.yaw()}}, \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}
+\code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}
 }

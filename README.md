@@ -7,9 +7,9 @@
 
 <!-- badges: end -->
 
-`araponga` allows users to estimate the 3D orientations (yaw and pitch)
-of an object knowing the 2D coordinates of two landmarks and the
-(approximate) elevation angle of camera/observer relative to the object.
+`araponga` allows users to extract 3D orientations (left/right, up/down)
+of an object based on 2D image coordinates of two landmarks and the
+(approximate) elevation angle between camera and object.
 
 ## Installation
 

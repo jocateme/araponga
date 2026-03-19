@@ -44,3 +44,6 @@ y_bases <- c(0, 0, 0)
 pitch2d.from.xy(x_tips, y_tips, x_bases, y_bases)
 
 }
+\seealso{
+\code{\link[=pitch2d.w.error]{pitch2d.w.error()}}, \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}}
+}

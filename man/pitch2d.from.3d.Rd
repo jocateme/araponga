@@ -44,3 +44,6 @@ pitch2d.from.3d(15, -30, 0, plot = TRUE)
 pitch2d.from.3d(15, 0, -30, plot = TRUE)
 
 }
+\seealso{
+\code{\link[=rotate3d]{rotate3d()}}, \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}
+}

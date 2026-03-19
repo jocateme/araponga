@@ -30,7 +30,7 @@ A \code{list} with elements:
 }
 }
 \description{
-Given two sets of candidate yaw angles, \code{\link[=trim.yaws]{trim.yaws()}} removes elements from each set that
+Given two sets of candidate yaw angles, \code{trim.yaws()} removes elements from each set that
 do not have at least one partner in the other set that is at least \code{min_sep} and up to
 \code{max_sep} clockwise (for \code{ccw_yaws} set) or counterclockwise (for \code{cw_yaws}) from it. In
 other words, each retained \code{ccw_yaws} angle will be ≥ \code{min_sep} and ≤ \code{max_sep}

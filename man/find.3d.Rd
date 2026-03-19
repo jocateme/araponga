@@ -103,7 +103,9 @@ The cached simulation table stores the resulting projected geometry and derived 
 pitch and any optional candidate constraints.
 }
 \examples{
-# hypothetical pitch2d from coordinates
+if(interactive()){
+
+#' # hypothetical pitch2d from coordinates
 p2d <- pitch2d.from.xy(10, 1, -12, 20)
 
 # pitches that project to `p2d` (± 2 pixel error) if seen from 30° (± 1° error) below
@@ -117,8 +119,9 @@ label_error = 2)
 # yaws that project to `p2d` (± 2 pixel error) if seen from 10° (± 2° error) below
 find.yaw(p2d, candidate_view_elevations = -8:-12, label_error = 2)
 
+}
 
 }
 \seealso{
-\code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}
+\code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}, \code{\link[=rotate3d]{rotate3d()}}, \code{\link[=download.simdata]{download.simdata()}}
 }

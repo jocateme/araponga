@@ -28,16 +28,18 @@
 #' ## view_elevation between -30 and -40
 #' plot.angles(-30:-40, "view_elevation")
 #' 
+#' if(interactive()){
 #' # call with output from find.3d
 #' ## pitches and yaws that project to 10° (± 1° error) if seen from 15° below
 #' df <- find.3d(9:11, find = c("pitch", "yaw"), candidate_view_elevations = -15)
 #' plot.angles(df)
+#' }
 #' 
 #' # call with named list
 #' list <- list(pitch = 10:30, yaw = -100:-45, view_elevation = -10:-15)
 #' plot.angles(list)
 #' 
-#' @seealso [find3d()]
+#' @seealso [find.3d()]
 #' @export plot.angles
 plot.angles <- function(angles = NULL,
                         type = NULL,
