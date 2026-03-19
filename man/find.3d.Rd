@@ -8,12 +8,12 @@
 \usage{
 find.3d(
   pitch2d,
-  find,
+  find = NULL,
   candidate_view_elevations = NULL,
   candidate_pitches = NULL,
   candidate_yaws = NULL,
   label_error,
-  label_nsim = 100,
+  label_nsamp = 625,
   sim_download = FALSE
 )
 
@@ -24,7 +24,7 @@ find.yaw(
   candidate_yaws = NULL,
   paired = FALSE,
   label_error,
-  label_nsim = 100,
+  label_nsamp = 625,
   sim_download = FALSE
 )
 
@@ -35,91 +35,88 @@ find.pitch(
   candidate_view_elevations = NULL,
   paired = FALSE,
   label_error,
-  label_nsim = 100,
+  label_nsamp = 625,
   sim_download = FALSE
 )
 }
 \arguments{
-\item{pitch2d}{Either an observed 2D pitch angle as returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} or a numeric
+\item{pitch2d}{Either a numeric scalar returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} or a numeric
 vector of >1 candidate 2D pitch angles (e.g., as returned by \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}), in degrees in the
 interval (-180, 180].}
 
 \item{find}{Character vector. Which angle(s) to return between "pitch", "yaw", "view_elevation", and
-"pitch2d".}
+"pitch2d". Default (\code{NULL}) returns all.}
 
-\item{candidate_view_elevations}{Optional numeric vector: known or candidate angle(s) between camera
-and object, in degrees, in the interval [-90, 90]. Convention: \code{-90} = seen from straight below,
-\code{0} = eye level, \code{90} = seen from straight above. Default is \code{NULL} (all view elevations considered).}
+\item{candidate_view_elevations}{Optional numeric vector: known or candidate camera elevation angle(s)
+relative to the object, in degrees, in the interval [-90, 90]. Convention: \code{-90} = seen from
+straight below, \code{0} = eye level, \code{90} = seen from straight above. Default is \code{NULL} (all view
+elevations considered). Provided values are rounded to the nearest integer.}
 
-\item{candidate_pitches}{Optional numeric vector: known or candidate (3D) pitch angle(s), in degrees, in
-the interval [-90, 90]. Convention: \code{90} = pointed up, \code{0} = horizontally aligned, \code{-90} = pointed
-down. Default is \code{NULL} (all pitches considered).}
+\item{candidate_pitches}{Optional numeric vector: known or candidate (3D) pitch angle(s), in degrees,
+in the interval [-90, 90]. Convention: \code{90} = pointed up, \code{0} = horizontally aligned, \code{-90} =
+pointed down. Default is \code{NULL} (all pitches considered). Provided values are rounded to the nearest
+integer.}
 
 \item{candidate_yaws}{Optional numeric vector: known or candidate yaw angle(s), in degrees, in the
 interval (-180, 180]. Convention: \code{0} = pointed right, \code{90} = pointed straight away, \code{-90} = pointed
-straight toward, \code{180} = pointed left. Default is \code{NULL} (all yaws considered).}
+straight toward, \code{180} = pointed left. Default is \code{NULL} (all yaws considered). Provided values are
+rounded to the nearest integer.}
 
-\item{label_error}{Positive numeric scalar specifying the error (± pixels) in landmark
-labeling. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Optional if \code{length(pitch2d) > 1}.}
+\item{label_error}{Positive numeric scalar specifying the error (± pixels) used to perturb landmark
+coordinates. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Optional if \code{length(pitch2d)} > 1.}
 
-\item{label_nsim}{Integer scalar (default 100). Number of Monte Carlo draws to simulate error in
-pitch2d calculation. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Optional if \code{length(pitch2d) > 1}.}
+\item{label_nsamp}{Positive integer scalar specifying the approximate number of grid combinations to
+evaluate. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Optional if \code{length(pitch2d)} > 1.}
 
 \item{sim_download}{Logical scalar. If \code{TRUE}, the function will attempt to download the precomputed
 simulation dataset automatically if it is not found in the local cache. Default is \code{FALSE}
 (CRAN-friendly).}
 
-\item{paired}{Logical scalar. If \code{TRUE}, a list of yaws mapped to pitches will be returned; if \code{FALSE}
-(default), a vector of yaws or pitches.}
+\item{paired}{Logical scalar. If \code{TRUE}, a \code{data.frame} of yaws mapped to pitches will be returned; if
+\code{FALSE} (default), a vector of yaws or pitches.}
 }
 \value{
-(UPDATE) A \code{data.frame} with two columns:
+A \code{data.frame} with all or a subset of the following columns:
 \describe{
-\item{pitches}{numeric: the (input) pitch values, in degrees, retained after filtering}
-\item{yaws}{numeric: the corresponding computed 3D yaws, in degrees (0 = pointed right,
-90 = pointed straight away, -90 = pointed straight toward, 180 = pointed left).}
+\item{pitch}{integer: pitch angles (degrees) compatible with the provided arguments.}
+\item{yaw}{integer: yaw angles (degrees) compatible with the provided arguments.}
+\item{pitch2d}{numeric: projected 2D pitch angles (degrees) compatible with the provided arguments.}
+\item{view_elevation}{integer: elevation angles (degrees) compatible with the provided arguments.}
 }
-If no (pitch, yaw) matches are found the returned data.frame has zero rows.
+If no matches are found, the returned data.frame has zero rows.
+
+For \code{find.pitch(..., paired = FALSE)} and \code{find.yaw(..., paired = FALSE)}, an integer vector of
+pitch or yaw angles compatible with the provided arguments.
 }
 \description{
 Using precomputed simulation data, recover the combinations of yaw, pitch, and view elevations
 (at 1° resolution) that produce a given observed 2D pitch. \code{find.pitch()} and \code{find.yaw()} are
-wrappers for finding 3D pitch and yaw respectively.
+convenient wrappers for two common uses: finding 3D pitch and yaw, respectively.
 }
 \details{
-(UPDATE) The function \code{\link[=find.pitch]{find.pitch()}} in practice finds which solutions of \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} reproduce \code{pitch2d}.
-
-More specifically, \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} constructs the full rotation matrix \eqn{R} using
-\code{\link[=rotate3d]{rotate3d()}} and computes the projected 2D pitch \eqn{p_{2}} as
-\deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big),}
-
-where:
-\deqn{R_{2,1} = \sin(p_{3})\cos(r_{3}) + \sin(r_{3})\sin(y_{3})\cos(p_{3}),}
-\deqn{R_{1,1} = \cos(p_{3})\cos(y_{3}),}
-
-\eqn{r_{3}} is \code{view_elevation}, \eqn{p_{3}} is a candidate/known 3D \code{pitch}, and \eqn{y_{3}}
-is the yaw we are interested in.
-
-We find \eqn{y_{3}} by inverting this relation:
-\deqn{\phi=\operatorname{atan2}(-\sin(r_{3}),\,\tan(p_{2}))}
-\deqn{y_{3} = \phi \pm \arccos\!\left(\dfrac{\cos(r_{3})\;\tan(p_{3})}{\sqrt{\tan(p_{2})^{2}+\sin(r_{3})^{2}}}\right)}
-
-This expression is implemented inside \code{\link[=find.yaw]{find.yaw()}}.
+The lookup is based on a precomputed Blender simulation grid. A 3D pyramid was generated and rotated
+by pitch, then yaw, then roll (equivalently to what \code{\link[=rotate3d]{rotate3d()}} does) for all 11,793,960
+integer combinations of pitch (\code{-90:90}), yaw (\code{-179:180}), and roll (\code{-90:90}). For each combination
+the base midpoint and tip were projected to 2D pixel coordinates with an orthographic camera.
+The cached simulation table stores the resulting projected geometry and derived 2D pitch values;
+\code{find.3d()} (and wrappers) then filter that table for combinations compatible with the requested 2D
+pitch and any optional candidate constraints.
 }
 \examples{
-(UPDATE) 
-# yaws that project to 10° seen from 15° below
-find.yaw(pitch2d = 10, view_elevation = -15, plot = TRUE)
+# hypothetical pitch2d from coordinates
+p2d <- pitch2d.from.xy(10, 1, -12, 20)
 
-# similar to above, but now given known pitch of 5°
-find.yaw(pitch2d = 10, view_elevation = -15, pitches = 5, plot = TRUE)
+# pitches that project to `p2d` (± 2 pixel error) if seen from 30° (± 1° error) below
+find.pitch(p2d, candidate_view_elevations = -29:-31, label_error = 2)
+# same returned values as from:
+find.3d(p2d, find = "pitch", candidate_view_elevations = -29:-31, label_error = 2)
+# similar to above, now given yaw between 5° and 15°
+find.pitch(pitch2d = p2d, candidate_view_elevations = -29:-31, candidate_yaws = 5:15,
+label_error = 2)
 
-# similar to above, but now given range of candidate pitches instead (0 to 35°)
-find.yaw(pitch2d = 10, view_elevation = -15, pitches = seq(0, 30, 0.1), plot = TRUE)
+# yaws that project to `p2d` (± 2 pixel error) if seen from 10° (± 2° error) below
+find.yaw(p2d, candidate_view_elevations = -8:-12, label_error = 2)
 
-# similar to above, but now restricting (integer rounding) to range of candidate yaws (0 to 15°)
-find.yaw(pitch2d = 10, view_elevation = -15, pitches = seq(0, 30, 0.1),
-           yaws = seq(0, 15, 0.1), plot = TRUE)
 
 }
 \seealso{

@@ -3,16 +3,14 @@
 #' @description
 #' Compute the 2D pitch angle defined by two landmarks: a tip point and a base point.
 #' 
+#' @param x_tip,x_base Numeric scalars or vectors: image x-coordinate(s) of tip and base of object, with
+#'  x increasing right.
+#' @param y_tip,y_base Numeric scalars or vectors: image y-coordinate(s) of the tip and base of objects,
+#'  with y increasing up.
+#' @param plot Logical scalar. `TRUE` draws a diagnostic plot with base-tip segment and calculated 2D
+#'  pitch angle. Plotting is only supported for single base-tip pair.
 #'
-#' @param x_tip Numeric scalar or vector: image x-coordinate(s) of the tip.
-#' @param y_tip Numeric scalar or vector: image y-coordinate(s) of the tip.
-#' @param x_base Numeric scalar or vector: image x-coordinate(s) of the base.
-#' @param y_base Numeric scalar or vector: image y-coordinate(s) of the base.
-#' @param plot Logical scalar. `TRUE` draws a diagnostic plot with base-tip segment and
-#' calculated 2D pitch angle. Plotting is only supported when all coordinate arguments are
-#' length 1; for vector inputs set `plot = FALSE`.
-#'
-#' @returns Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
+#' @return Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
 #'  Convention: `0` points right, `90` points up, `-90` points down, `180` points left.
 #'  
 #' @details
@@ -33,8 +31,9 @@
 #' y_tips  <- c(0, 1, 0)
 #' x_bases <- c(0, 0, 0)
 #' y_bases <- c(0, 0, 0)
-#' pitch2d.from.xy(x_tips, y_tips, x_bases, y_bases, plot = FALSE)
+#' pitch2d.from.xy(x_tips, y_tips, x_bases, y_bases)
 #' 
+#' @seealso [pitch2d.w.error()], [pitch2d.from.3d()]
 #' @export
 pitch2d.from.xy <- function(x_tip,
                             y_tip,
@@ -45,6 +44,9 @@ pitch2d.from.xy <- function(x_tip,
   ## ---- input validation ----
   if (missing(x_tip) || missing(y_tip) || missing(x_base) || missing(y_base)) {
     stop("All coordinate arguments (x_tip, y_tip, x_base, y_base) must be provided.", call. = FALSE)
+  }
+  if (length(x_tip) == 0 || length(y_tip) == 0 || length(x_base)==0 || length(y_base) == 0) {
+    stop("One or more empty coordinate arguments provided.", call. = FALSE)
   }
   if (!is.numeric(x_tip) || !is.numeric(y_tip) || !is.numeric(x_base) || !is.numeric(y_base)) {
     stop("All coordinate arguments must be numeric.", call. = FALSE)

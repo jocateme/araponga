@@ -1,7 +1,7 @@
 #' Trim candidate yaw sets known or expected to differ in yaw
 #'
 #' @description
-#' Given two sets of candidate yaw angles, [trim.yaws()] removes elements from each set that
+#' Given two sets of candidate yaw angles, `trim.yaws()` removes elements from each set that
 #' do not have at least one partner in the other set that is at least `min_sep` and up to
 #' `max_sep` clockwise (for `ccw_yaws` set) or counterclockwise (for `cw_yaws`) from it. In
 #' other words, each retained `ccw_yaws` angle will be ≥ `min_sep` and ≤ `max_sep`
@@ -47,15 +47,27 @@ trim.yaws <- function(ccw_yaws,
                       plot = FALSE
 ){
   
-  # basic argument validation
-  if (!is.numeric(max_sep) || !is.numeric(min_sep)) stop("max_sep and min_sep must be numeric", call. = FALSE)
-  if (min_sep < 0) stop("min_sep must be >= 0", call. = FALSE)
-  if (min_sep > max_sep) stop("min_sep must be <= max_sep", call. = FALSE)
+  if (missing(ccw_yaws) || missing(cw_yaws)) {
+    stop("Both 'ccw_yaws' and 'cw_yaws' must be supplied.", call. = FALSE)
+  }
+  if (!(is.numeric(min_sep) && length(min_sep) == 1 && is.finite(min_sep))) {
+    stop("'min_sep' must be a single finite numeric value.", call. = FALSE)
+  }
+  if (!(is.numeric(max_sep) && length(max_sep) == 1 && is.finite(max_sep))) {
+    stop("'max_sep' must be a single finite numeric value.", call. = FALSE)
+  }
+  if (min_sep < 0) stop("'min_sep' must be >= 0.", call. = FALSE)
+  if (max_sep < 0) stop("'max_sep' must be >= 0.", call. = FALSE)
+  if (min_sep > max_sep) stop("'min_sep' must be <= 'max_sep'.", call. = FALSE)
   
-  if (missing(ccw_yaws) || missing(cw_yaws)) stop("Both ccw_yaws and cw_yaws must be supplied.", call. = FALSE)
-  if (!is.numeric(ccw_yaws) || !is.numeric(cw_yaws)) stop("ccw_yaws and cw_yaws must be numeric.", call. = FALSE)
-  if (any(is.na(ccw_yaws)) || any(is.na(cw_yaws))) stop("ccw_yaws and cw_yaws must not contain NA values.", call. = FALSE)
+  if (!is.numeric(ccw_yaws) || !is.numeric(cw_yaws)) {
+    stop("'ccw_yaws' and 'cw_yaws' must be numeric vectors.", call. = FALSE)
+  }
+  if (any(is.na(ccw_yaws)) || any(is.na(cw_yaws))) {
+    stop("'ccw_yaws' and 'cw_yaws' must not contain NA values.", call. = FALSE)
+  }
   
+  # angle range check; require -180 < angle <= 180
   if (any(ccw_yaws <= -180 | ccw_yaws > 180) || any(cw_yaws <= -180 | cw_yaws > 180)) {
     stop("Yaw angles must satisfy -180 < yaw <= 180 degrees.", call. = FALSE)
   }
@@ -67,7 +79,7 @@ trim.yaws <- function(ccw_yaws,
   
   # quick exit: if either set is empty there's nothing to match
   if (length(ccw_yaws) == 0 || length(cw_yaws) == 0) {
-    return(list(new_ccw_yaws = numeric(0), new_cw_yaws = numeric(0)))
+    return(list(trimmed_ccw_yaws = numeric(0), trimmed_cw_yaws = numeric(0)))
   }
   
   # iterative mutual trimming
@@ -99,7 +111,7 @@ trim.yaws <- function(ccw_yaws,
     high_cw <- ((cw_yaws + max_sep + 180) %% 360) - 180
     
     if (length(ccw_yaws_new) == 0) {
-      cw_yaws_new <- integer(0)
+      cw_yaws_new <- numeric(0)
     } else {
       idx_low_cw  <- findInterval(low_cw - 1e-10, ccw_yaws_new) 
       idx_high_cw <- findInterval(high_cw, ccw_yaws_new)
@@ -125,23 +137,37 @@ trim.yaws <- function(ccw_yaws,
     
   }
   
-  if(plot){
+  if(isTRUE(plot)){
     
     ccw_excl <- ccw_original[!ccw_original %in% ccw_yaws]
     cw_excl <- cw_original[!cw_original %in% cw_yaws]
     
     old_par <- graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(old_par), add = TRUE)
-    graphics::par(mfrow = c(1, 2))
+    graphics::par(mfrow = c(1,2))
     
-    visualize.angles(yaws = c(ccw_yaws, ccw_excl),
-                     col.yaws = c(rep("green", length(ccw_yaws)),
-                                  rep("red", length(ccw_excl))),
-                     main.yaws = "ccw_yaws")
-    visualize.angles(yaws = c(cw_yaws, cw_excl),
-                     col.yaws = c(rep("green", length(cw_yaws)),
-                                  rep("red", length(cw_excl))),
-                     main.yaws = "cw_yaws")
+    plot.angles(ccw_yaws,
+                type = "yaw",
+                col = "green",
+                main = "CCW yaws",
+                labels = FALSE)
+    plot.angles(ccw_excl,
+                type = "yaw",
+                col = "red",
+                labels = FALSE,
+                add = TRUE)
+    
+    plot.angles(cw_yaws,
+                type = "yaw",
+                col = "green",
+                main = "CW yaws",
+                labels = FALSE)
+    plot.angles(cw_excl,
+                type = "yaw",
+                col = "red",
+                main = "CW yaws",
+                labels = FALSE,
+                add = TRUE)
     
   }
   

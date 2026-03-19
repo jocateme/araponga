@@ -1,33 +1,53 @@
 #' Simulate error in 2D pitch calculation from labeling error
 #'
-#' `pitch2d.w.error()` simulates the effect of labeling inaccuracy on `pitch2d`
-#' calculation.
+#' `pitch2d.w.error()` simulates the effect of landmark-labeling uncertainty on a 2D pitch
+#' value returned by [pitch2d.from.xy()].
 #'
-#' @param pitch2d Numeric scalar: 2D pitch as returned by [pitch2d.from.xy()], in degrees in
-#'  the interval (-180, 180].
-#' @param label_error Positive numeric scalar specifying the error (± pixels) in landmark
-#'  labeling.
-#' @param label_nsim Integer scalar (default 100). Number of Monte Carlo draws passed internally to
-#'  [runif()] to simulate error in pitch2d calculation.
+#' @param pitch2d Numeric scalar returned by [pitch2d.from.xy()].
+#' @param label_error Positive numeric scalar specifying the error (± pixels) used to perturb each
+#'  landmark coordinate.
+#' @param label_nsamp Positive integer scalar specifying the approximate number of grid combinations to
+#'  evaluate. Default 625 uses a 5-point grid for each of the four coordinates, for 5^4 = 625 total
+#'  combinations.
+#' @param add_boundaries Logical scalar (default `FALSE`). If `TRUE`, boundary angles `0`, `90`, `-90`,
+#'  and `180` are added when the simulated set spans them. This is useful when working with the returned
+#'  angles individually, since these boundary values can behave differently from interior values.
 #'  
-#' @returns
-#' (UPDATE)
-#' `lookup.error()` returns a named list with two elements:
-#' \describe{
-#'   \item{`pitch`}{a list of maximum errors in pitch per source of error (named).}
-#'   \item{`yaw`}{a list of maximum errors in yaw per source of error (named).}
-#'   }
-#'
-#' `include.error()` returns a numeric vector with the expanded candidate angles (pitches or yaws)
-#' after incorporating the maximum error retrieved by `lookup.error()$pitch` or `lookup.error()$yaw`
-#' with a 0.01 resolution. The maximum error is stored as vector in the attribute `error.included`.
+#' @return Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval `(-180, 180]`.
 #' 
-#' @seealso [find.pitch()], [find.yaw()], [pitch2d.from.xy()]
+#' @seealso [pitch2d.from.xy()]
 #' @export
 pitch2d.w.error <- function(pitch2d,
                             label_error,
                             label_nsamp = 625,
-                            canonical = FALSE){
+                            add_boundaries = FALSE){
+  
+  if (!is.numeric(pitch2d) || length(pitch2d) != 1 || !is.finite(pitch2d)) {
+    stop("`pitch2d` must be a finite numeric scalar.", call. = FALSE)
+  }
+  
+  xy <- attributes(pitch2d)$xy
+  if (is.null(xy) ||
+      !is.list(xy) ||
+      !all(c("x_tip", "y_tip", "x_base", "y_base") %in% names(xy)) ||
+      any(!vapply(xy[c("x_tip", "y_tip", "x_base", "y_base")], is.numeric, logical(1)))) {
+    stop("`pitch2d` must carry a valid `xy` attribute as returned by `pitch2d.from.xy()`.", call. = FALSE)
+  }
+  
+  if (!is.numeric(label_error) || length(label_error) != 1 || !is.finite(label_error) || label_error <= 0) {
+    stop("`label_error` must be a positive numeric scalar.", call. = FALSE)
+  }
+  
+  if (!is.numeric(label_nsamp) || length(label_nsamp) != 1 || !is.finite(label_nsamp) ||
+      label_nsamp < 1 || abs(label_nsamp - round(label_nsamp)) > 1e-8) {
+    stop("`label_nsamp` must be a positive integer scalar.", call. = FALSE)
+  }
+  
+  if (!is.logical(add_boundaries) || length(add_boundaries) != 1 || is.na(add_boundaries)) {
+    stop("`add_boundaries` must be a logical scalar.", call. = FALSE)
+  }
+  
+  label_nsamp <- as.integer(round(label_nsamp))
   
   xy <- attributes(pitch2d)$xy
   x_tip <- xy$x_tip
@@ -35,7 +55,7 @@ pitch2d.w.error <- function(pitch2d,
   x_base <- xy$x_base
   y_base <- xy$y_base
   
-  n <- round(label_nsamp^(1/4))
+  n <- ceiling(label_nsamp^(1/4))
   t_x <- seq(x_tip - label_error, x_tip + label_error, length.out = n)
   t_y <- seq(y_tip - label_error, y_tip + label_error, length.out = n)
   b_x <- seq(x_base - label_error, x_base + label_error, length.out = n)
@@ -46,7 +66,7 @@ pitch2d.w.error <- function(pitch2d,
                                              rep(b_x, each = n, times = n^2),
                                              rep(b_y, times = n^3))))
   
-  if(canonical){
+  if(add_boundaries){
     
     p2d.summ <- summarize.yaws(pitch2d.all)
     

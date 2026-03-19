@@ -2,15 +2,26 @@
 % Please edit documentation in R/download.simdata.R
 \name{download.simdata}
 \alias{download.simdata}
-\title{Title}
+\title{Download the precomputed simulation dataset}
 \usage{
 download.simdata(overwrite = FALSE, quiet = FALSE)
 }
 \arguments{
-\item{overwrite}{}
+\item{overwrite}{Logical scalar. If \code{TRUE}, re-download the archive even if a cached copy
+is already present.}
 
-\item{quiet}{}
+\item{quiet}{Logical scalar. If \code{TRUE}, suppress download progress and nonessential messages
+where supported by the underlying downloader.}
+}
+\value{
+An invisible character scalar giving the normalized path to the extracted simulation
+dataset directory.
 }
 \description{
-Title
+Download the precomputed simulation dataset used by \code{\link[=find.3d]{find.3d()}} and related functions.
+}
+\details{
+The dataset is stored under \code{tools::R_user_dir("araponga", "cache")}. If the archive is already
+available locally and \code{overwrite = FALSE}, the cached dataset is reused. See \code{\link[=find.3d]{find.3d()}} for how
+the dataset was constructed.
 }

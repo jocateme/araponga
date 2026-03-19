@@ -10,18 +10,18 @@
 #' @param yaw Numeric scalar: horizontal angle around the vertical axis, in degrees, in the
 #'  interval (-180, 180]. Convention: `0` = pointed right, `90` = pointed straight away,
 #'  `-90` = pointed straight toward, `180` = pointed left.
-#' @param view_elevation Numeric scalar: angle between camera and object, in degrees, in the
-#'  interval \[-90, 90\]. Convention: `-90` = seen from straight below, `0` = eye level,
+#' @param view_elevation Numeric scalar: camera elevation angle relative to the object, in degrees, in
+#'  the interval \[-90, 90\]. Convention: `-90` = seen from straight below, `0` = eye level,
 #'  `90` = seen from straight above.
 #' @param plot Logical scalar. `TRUE` draws a diagnostic plot with original and rotated axes,
 #'  and calculated 2D pitch angle. 
 #'
-#' @returns Numeric scalar: 2D pitch angle, in degrees, in the interval (-180°, 180°].
+#' @return Numeric scalar: 2D pitch angle, in degrees, in the interval (-180°, 180°].
 #'  Convention: `0` points right, `90` points up, `-90` points down, `180` points left.
 #'
 #' @details
 #' The function constructs the full rotation matrix \eqn{R} using
-#' [rotate3d](`pitch`, `yaw`, `view_elevation`) and computes the projected 2D pitch \eqn{p_{2}} as
+#' `rotate3d(pitch, yaw, view_elevation)` and computes the projected 2D pitch \eqn{p_{2}} as
 #' \deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big)}
 #' 
 #' @examples
@@ -32,6 +32,7 @@
 #' # object pointed up 15 degrees, looked at from 30 degrees below
 #' pitch2d.from.3d(15, 0, -30, plot = TRUE)
 #' 
+#' @seealso [rotate3d()], [pitch2d.from.xy()]
 #' @export
 pitch2d.from.3d <- function(pitch,
                             yaw,
@@ -39,9 +40,9 @@ pitch2d.from.3d <- function(pitch,
                             plot = FALSE){
   
   ## ---- input validation ----
-  if (!is.numeric(pitch) || length(pitch) != 1) stop("`pitch` must be a numeric scalar.", call. = FALSE)
-  if (!is.numeric(yaw) || length(yaw) != 1) stop("`yaw` must be a numeric scalar.", call. = FALSE)
-  if (!is.numeric(view_elevation) || length(view_elevation) != 1) stop("`view_elevation` must be a numeric scalar.", call. = FALSE)
+  if (!is.numeric(pitch) || length(pitch) != 1 || !is.finite(pitch)) stop("`pitch` must be a numeric scalar.", call. = FALSE)
+  if (!is.numeric(yaw) || length(yaw) != 1 || !is.finite(yaw)) stop("`yaw` must be a numeric scalar.", call. = FALSE)
+  if (!is.numeric(view_elevation) || length(view_elevation) != 1 || !is.finite(view_elevation)) stop("`view_elevation` must be a numeric scalar.", call. = FALSE)
   if (!is.logical(plot) || length(plot) != 1) stop("`plot` must be a logical scalar.", call. = FALSE)
   
   if(view_elevation < -90 | view_elevation > 90){
@@ -61,6 +62,9 @@ pitch2d.from.3d <- function(pitch,
   pitch2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
   
   if(plot){
+    old_par <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(xpd = TRUE)
     xlim = ylim = c(-1, 1)
     graphics::plot(x = c(R_total[1,1], 0),
                    y = c(R_total[2,1], 0),
@@ -91,7 +95,7 @@ pitch2d.from.3d <- function(pitch,
     
     graphics::text(x = c(R_total[1,1], R_total[1,2], R_total[1,3]),
                    y = c(R_total[2,1], R_total[2,2], R_total[2,3]),
-                   lab = c("rotated x",
+                   labels = c("rotated x",
                            "rotated y",
                            "rotated z"),
                    col = c("darkgreen",
@@ -100,7 +104,7 @@ pitch2d.from.3d <- function(pitch,
     
     graphics::text(x = c(1, 0),
                    y = c(0, 1),
-                   lab = c("original x",
+                   labels = c("original x",
                            "original y"),
                    col = c("darkgreen",
                            "darkred"))

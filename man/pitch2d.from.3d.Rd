@@ -15,8 +15,8 @@ down.}
 interval (-180, 180]. Convention: \code{0} = pointed right, \code{90} = pointed straight away,
 \code{-90} = pointed straight toward, \code{180} = pointed left.}
 
-\item{view_elevation}{Numeric scalar: angle between camera and object, in degrees, in the
-interval [-90, 90]. Convention: \code{-90} = seen from straight below, \code{0} = eye level,
+\item{view_elevation}{Numeric scalar: camera elevation angle relative to the object, in degrees, in
+the interval [-90, 90]. Convention: \code{-90} = seen from straight below, \code{0} = eye level,
 \code{90} = seen from straight above.}
 
 \item{plot}{Logical scalar. \code{TRUE} draws a diagnostic plot with original and rotated axes,
@@ -32,7 +32,7 @@ elevation.
 }
 \details{
 The function constructs the full rotation matrix \eqn{R} using
-\link{rotate3d}(\code{pitch}, \code{yaw}, \code{view_elevation}) and computes the projected 2D pitch \eqn{p_{2}} as
+\code{rotate3d(pitch, yaw, view_elevation)} and computes the projected 2D pitch \eqn{p_{2}} as
 \deqn{p_{2} = \operatorname{atan2}\!\big(R_{2,1},\,R_{1,1}\big)}
 }
 \examples{

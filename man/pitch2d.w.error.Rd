@@ -4,34 +4,33 @@
 \alias{pitch2d.w.error}
 \title{Simulate error in 2D pitch calculation from labeling error}
 \usage{
-pitch2d.w.error(pitch2d, label_error, label_nsim = 100)
+pitch2d.w.error(
+  pitch2d,
+  label_error,
+  label_nsamp = 625,
+  add_boundaries = FALSE
+)
 }
 \arguments{
-\item{pitch2d}{Numeric scalar: 2D pitch as returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, in degrees in
-the interval (-180, 180].}
+\item{pitch2d}{Numeric scalar returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.}
 
-\item{label_error}{Positive numeric scalar specifying the error (± pixels) in landmark
-labeling.}
+\item{label_error}{Positive numeric scalar specifying the error (± pixels) used to perturb each
+landmark coordinate.}
 
-\item{label_nsim}{Integer scalar (default 100). Number of Monte Carlo draws passed internally to
-\code{\link[=runif]{runif()}} to simulate error in pitch2d calculation.}
+\item{label_nsamp}{Positive integer scalar specifying the approximate number of grid combinations to
+evaluate. Default 625 uses a 5-point grid for each of the four coordinates, for 5^4 = 625 total
+combinations.}
 
-\item{plot}{Logical scalar. \code{TRUE} plots original and expanded sets of angles side by side.}
+\item{add_boundaries}{Logical scalar (default \code{FALSE}). If \code{TRUE}, boundary angles \code{0}, \code{90}, \code{-90},
+and \code{180} are added when the simulated set spans them. This is useful when working with the returned
+angles individually, since these boundary values can behave differently from interior values.}
 }
 \value{
-\code{lookup.error()} returns a named list with two elements:
-\describe{
-\item{\code{pitch}}{a list of maximum errors in pitch per source of error (named).}
-\item{\code{yaw}}{a list of maximum errors in yaw per source of error (named).}
-}
-
-\code{include.error()} returns a numeric vector with the expanded candidate angles (pitches or yaws)
-after incorporating the maximum error retrieved by \code{lookup.error()$pitch} or \code{lookup.error()$yaw}
-with a 0.01 resolution. The maximum error is stored as vector in the attribute \code{error.included}.
+Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval \verb{(-180, 180]}.
 }
 \description{
-\code{pitch2d.w.error()} simulates the effect of labeling inaccuracy on \code{pitch2d}
-calculation.
+\code{pitch2d.w.error()} simulates the effect of landmark-labeling uncertainty on a 2D pitch
+value returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.
 }
 \seealso{
 \code{\link[=find.pitch]{find.pitch()}}, \code{\link[=find.yaw]{find.yaw()}}, \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}

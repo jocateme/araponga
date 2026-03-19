@@ -1,119 +1,173 @@
-#' Title
+#' Download the precomputed simulation dataset
 #'
-#' @param overwrite 
-#' @param quiet 
+#' @description
+#' Download the precomputed simulation dataset used by [find.3d()] and related functions.
 #'
-#' @returns
+#' @param overwrite Logical scalar. If `TRUE`, re-download the archive even if a cached copy
+#'  is already present.
+#' @param quiet Logical scalar. If `TRUE`, suppress download progress and nonessential messages
+#'  where supported by the underlying downloader.
+#'
+#' @return An invisible character scalar giving the normalized path to the extracted simulation
+#' dataset directory.
+#'
+#' @details
+#' The dataset is stored under `tools::R_user_dir("araponga", "cache")`. If the archive is already
+#' available locally and `overwrite = FALSE`, the cached dataset is reused. See [find.3d()] for how
+#' the dataset was constructed.
+#'
 #' @export
-#'
-#' @examples
 download.simdata <- function(overwrite = FALSE,
                              quiet = FALSE){
   
+  
+  if (!is.logical(overwrite) || length(overwrite) != 1 || is.na(overwrite)) {
+    stop("`overwrite` must be a logical scalar.", call. = FALSE)
+  }
+  if (!is.logical(quiet) || length(quiet) != 1 || is.na(quiet)) {
+    stop("`quiet` must be a logical scalar.", call. = FALSE)
+  }
+  
   dest_dir <- tools::R_user_dir("araponga", "cache")
+  dataset_dir <- file.path(dest_dir, "sim_data_parquet")
   remote_url <- "https://zenodo.org/records/18982472/files/sim_data_parquet.zip?download=1"
   expected_md5 <- "7b3a60ffdadbf60f93b33a30c8088475"
   
-  stopifnot(is.character(remote_url), nzchar(remote_url))
+  has_parquet_files <- function(path) {
+    length(list.files(path, pattern = "\\.parquet$", recursive = TRUE, full.names = TRUE)) > 0
+  }
   
   dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
   
-  # build a stable zip filename (strip query params)
-  zip_path <- file.path(dest_dir, "sim_data_parquet.zip")
-  
-  if (dir.exists(zip_path) && !overwrite) {
-    return(normalizePath(zip_path, winslash = "/"))
+  # Reuse a complete existing cache
+  if (dir.exists(dataset_dir) && has_parquet_files(dataset_dir) && !overwrite) {
+    return(normalizePath(dataset_dir, winslash = "/"))
   }
   
-  # Download to temporary file first to avoid leaving partial files on error
+  # Remove incomplete or stale cache before rebuilding
+  if (dir.exists(dataset_dir)) {
+    unlink(dataset_dir, recursive = TRUE, force = TRUE)
+  }
+  
+  zip_path <- file.path(dest_dir, "sim_data_parquet.zip")
   tmp_zip <- paste0(zip_path, ".partial")
+  tmp_extract <- tempfile("sim_data_extract_", tmpdir = dest_dir)
+  dir.create(tmp_extract, showWarnings = FALSE)
+  
   on.exit({
-    if (file.exists(tmp_zip)) try(file.remove(tmp_zip), silent = TRUE)
+    if (file.exists(tmp_zip)) {
+      unlink(tmp_zip)
+    }
+    if (dir.exists(tmp_extract)) {
+      unlink(tmp_extract, recursive = TRUE, force = TRUE)
+    }
   }, add = TRUE)
   
-  # downloader choice: curl -> httr -> utils::download.file
-  downloaded <- FALSE
-  ua <- paste0("araponga (mailto:jocateme@gmail.com)")
+  ua <- "araponga"
   
-  message("Downloading zipped dataset (99MB)")
+  if (!quiet) {
+    message("Downloading zipped dataset...")
+  }
+  
+  downloaded <- FALSE
+  
   if (requireNamespace("curl", quietly = TRUE)) {
     h <- curl::new_handle()
     curl::handle_setheaders(h, "User-Agent" = ua)
-    try({
+    downloaded <- tryCatch({
       curl::curl_download(remote_url, tmp_zip, quiet = quiet, handle = h)
-      downloaded <- TRUE
-    }, silent = FALSE)
+      TRUE
+    }, error = function(e) FALSE)
   }
   
   if (!downloaded && requireNamespace("httr", quietly = TRUE)) {
-    try({
-      resp <- httr::GET(remote_url,
-                        httr::write_disk(tmp_zip, overwrite = TRUE),
-                        httr::user_agent(ua),
-                        httr::progress())
+    downloaded <- tryCatch({
+      resp <- httr::GET(
+        remote_url,
+        httr::write_disk(tmp_zip, overwrite = TRUE),
+        httr::user_agent(ua),
+        if (!quiet) httr::progress()
+      )
       httr::stop_for_status(resp)
-      downloaded <- TRUE
-    }, silent = FALSE)
+      TRUE
+    }, error = function(e) FALSE)
   }
   
   if (!downloaded) {
-    # fallback to base download.file (no progress, less reliable for redirects)
-    try({
+    downloaded <- tryCatch({
       utils::download.file(remote_url, tmp_zip, mode = "wb", quiet = quiet)
-      downloaded <- TRUE
-    }, silent = FALSE)
+      TRUE
+    }, error = function(e) FALSE)
   }
   
   if (!downloaded || !file.exists(tmp_zip)) {
-    stop("Download failed. Check your `remote_url` and network connection.")
+    stop("Download failed. Check the URL and your network connection.", call. = FALSE)
   }
   
-  # rename final zip
-  if (file.exists(zip_path) && overwrite) file.remove(zip_path)
-  file.rename(tmp_zip, zip_path)
+  if (file.exists(zip_path)) {
+    unlink(zip_path)
+  }
+  ok <- file.rename(tmp_zip, zip_path)
+  if (!ok || !file.exists(zip_path)) {
+    stop("Could not move the downloaded archive into the cache directory.", call. = FALSE)
+  }
   
-  # verify checksum
-  actual_md5 <- digest::digest(zip_path, algo = "md5", file = TRUE)
+  actual_md5 <- unname(tools::md5sum(zip_path))
   if (!identical(tolower(actual_md5), tolower(expected_md5))) {
-    file.remove(zip_path)
-    stop("Checksum mismatch: downloaded file may be corrupted.\n",
-         "Expected: ", expected_md5, "\nGot:      ", actual_md5)
+    unlink(zip_path)
+    stop(
+      paste0(
+        "Checksum mismatch: downloaded file may be corrupted.\n",
+        "Expected: ", expected_md5, "\n",
+        "Got:      ", actual_md5
+      ),
+      call. = FALSE
+    )
   }
   
-  # unzip into dest_dir
-  utils::unzip(zip_path, exdir = dest_dir)
+  utils::unzip(zip_path, exdir = tmp_extract)
   
-  # determine extracted folder: prefer the expected name, otherwise pick the newest dir
-  if (dir.exists(zip_path)) {
-    out_dir <- zip_path
+  # Identify the extracted dataset location.
+  if (has_parquet_files(tmp_extract)) {
+    source_dir <- tmp_extract
   } else {
-    # try to find a newly created directory under dest_dir
-    ds <- list.dirs(dest_dir, full.names = TRUE, recursive = FALSE)
-    # ignore cache root
-    ds <- setdiff(ds, dest_dir)
-    if (length(ds) == 1L) {
-      out_dir <- ds[1]
+    top_dirs <- list.files(tmp_extract, full.names = TRUE, recursive = FALSE)
+    top_dirs <- top_dirs[file.info(top_dirs)$isdir %in% TRUE]
+    
+    if (length(top_dirs) == 1L && has_parquet_files(top_dirs[1])) {
+      source_dir <- top_dirs[1]
     } else {
-      # if multiple candidates, try to detect a dir containing parquet files
-      parquet_dir <- NULL
-      for (d in ds) {
-        if (length(list.files(d, pattern = "\\.parquet$", recursive = TRUE)) > 0) {
-          parquet_dir <- d
-          break
-        }
-      }
-      if (!is.null(parquet_dir)) {
-        out_dir <- parquet_dir
+      parquet_dirs <- top_dirs[vapply(top_dirs, has_parquet_files, logical(1))]
+      if (length(parquet_dirs) == 1L) {
+        source_dir <- parquet_dirs[1]
       } else {
-        stop("Could not locate extracted simulation dataset. Check archive structure.")
+        stop("Could not locate extracted simulation dataset. Check archive structure.", call. = FALSE)
       }
     }
   }
   
-  unlink(zip_path)
-  unlink(paste0(dest_dir, "/__MACOSX/"), recursive = TRUE)
+  if (dir.exists(dataset_dir)) {
+    unlink(dataset_dir, recursive = TRUE, force = TRUE)
+  }
+  ok <- file.rename(source_dir, dataset_dir)
+  if (!ok || !dir.exists(dataset_dir)) {
+    stop("Could not move extracted dataset into the cache directory.", call. = FALSE)
+  }
   
-  out_dir <- normalizePath(out_dir, winslash = "/")
-  message("Simulation dataset available at: ", out_dir)
+  if (file.exists(zip_path)) {
+    unlink(zip_path)
+  }
+  
+  out_dir2 <- paste0(out_dir, "2")
+  file.rename(out_dir,
+              out_dir2)
+  file.rename(file.path(out_dir2, "sim_data_parquet"),
+               out_dir)
+  unlink(out_dir2, recursive = TRUE)
+  
+  out_dir <- normalizePath(dataset_dir, winslash = "/")
+  if (!quiet) {
+    message("Simulation dataset available at: ", out_dir)
+  }
   invisible(out_dir)
 }

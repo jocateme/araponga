@@ -4,26 +4,32 @@
 \alias{summarize.yaws}
 \title{Summarize yaw angles into the smallest continuous interval}
 \usage{
-summarize.yaws(yaws, plot = FALSE)
+summarize.yaws(yaws, plot = FALSE, tie_action = c("all", "error"))
 }
 \arguments{
 \item{yaws}{Numeric vector of yaw angles, in degrees, in the interval (-180, 180].}
 
 \item{plot}{Logical scalar. \code{TRUE} draws a diagnostic plot with individual candidate angles and
 the returned smallest continuous interval that contains them. Works only when \code{length(yaws) > 1}.}
+
+\item{tie_action}{Choice between \code{"all"} and "\code{error}" on how to proceed when multiple smallest
+continuous intervals exist. \code{"all"} (default) issues a warning and returns all possible intervals
+(see Value), while "\code{error}" issues an error.}
 }
 \value{
 A named \code{list} with components:
 \describe{
 \item{from}{numeric scalar: interval start (clockwise-most endpoint), in degrees.}
-\item{to}{numeric scalar: inverval end (counterclockwise-most endpoint), in degrees.}
+\item{to}{numeric scalar: interval end (counterclockwise-most endpoint), in degrees.}
 \item{width}{numeric scalar: angular width of the shortest enclosing arc, in degrees.}
-\item{wrap}{logical: \code{TRUE} if the interval crosses the -180/180 boundary.}
+\item{wrap}{logical: \code{TRUE} if the interval crosses the ±180 boundary.}
+\item{alternatives}{list containing the output (from, to, width, wrap) for all alternative intervals,
+if any}
 }
 }
 \description{
-Given a set of yaw angles, \code{summarize.yaws()} returns the endpoints and width of the smallest
-continuous angular interval that contains all supplied yaws.
+Given a set of yaw angles (or any set of angles that wrap around ± 180), \code{summarize.yaws()} returns
+the endpoints and width of the smallest continuous angular interval that contains all supplied angles.
 }
 \examples{
 # simple non-wrapping interval
@@ -33,10 +39,13 @@ summarize.yaws(-60:60, plot = TRUE)
 summarize.yaws(c(-175:-170, 171:179), plot = TRUE)
 
 # output from find.yaw()
-yaws <- find.yaw(pitch2d = 15, view_elevation = -45, pitches = seq(10, 20, 0.1))$yaws
+yaws <- find.yaw(pitch2d = 14:16, candidate_view_elevations = -45, candidate_pitches = 10:20)
 summarize.yaws(yaws, plot = TRUE)
 
 # singleton (no plotting)
 summarize.yaws(30)
+
+# more than one interval possible (returns warning)
+summarize.yaws(c(-90, 90))
 
 }

@@ -7,17 +7,14 @@
 pitch2d.from.xy(x_tip, y_tip, x_base, y_base, plot = FALSE)
 }
 \arguments{
-\item{x_tip}{Numeric scalar or vector: image x-coordinate(s) of the tip.}
+\item{x_tip, x_base}{Numeric scalars or vectors: image x-coordinate(s) of tip and base of object, with
+x increasing right.}
 
-\item{y_tip}{Numeric scalar or vector: image y-coordinate(s) of the tip.}
+\item{y_tip, y_base}{Numeric scalars or vectors: image y-coordinate(s) of the tip and base of objects,
+with y increasing up.}
 
-\item{x_base}{Numeric scalar or vector: image x-coordinate(s) of the base.}
-
-\item{y_base}{Numeric scalar or vector: image y-coordinate(s) of the base.}
-
-\item{plot}{Logical scalar. \code{TRUE} draws a diagnostic plot with base-tip segment and
-calculated 2D pitch angle. Plotting is only supported when all coordinate arguments are
-length 1; for vector inputs set \code{plot = FALSE}.}
+\item{plot}{Logical scalar. \code{TRUE} draws a diagnostic plot with base-tip segment and calculated 2D
+pitch angle. Plotting is only supported for single base-tip pair.}
 }
 \value{
 Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
@@ -44,6 +41,6 @@ x_tips  <- c(1, 0, -1)
 y_tips  <- c(0, 1, 0)
 x_bases <- c(0, 0, 0)
 y_bases <- c(0, 0, 0)
-pitch2d.from.xy(x_tips, y_tips, x_bases, y_bases, plot = FALSE)
+pitch2d.from.xy(x_tips, y_tips, x_bases, y_bases)
 
 }
