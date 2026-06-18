@@ -17,7 +17,7 @@
 #'   \item{to}{numeric scalar: interval end (counterclockwise-most endpoint), in degrees.}
 #'   \item{width}{numeric scalar: angular width of the shortest enclosing arc, in degrees.}
 #'   \item{wrap}{logical: `TRUE` if the interval crosses the ±180 boundary.}
-#'   \item{alternatives}{list containing the output (from, to, width, wrap) for all alternative intervals,
+#'   \item{all}{list containing the output (from, to, width, wrap) for all alternative intervals,
 #'   if any}
 #'   }
 #'   
@@ -28,12 +28,10 @@
 #' # a wrapping interval (points around ±180)
 #' summarize.yaws(c(-175:-170, 171:179), plot = TRUE)
 #' 
+#' #' # output from find.yaw()
 #' if(interactive()){
-#' 
-#' # output from find.yaw()
 #' yaws <- find.yaw(pitch2d = 14:16, candidate_view_elevations = -45, candidate_pitches = 10:20)
 #' summarize.yaws(yaws, plot = TRUE)
-#' 
 #' }
 #'
 #' # singleton (no plotting)
@@ -73,7 +71,8 @@ summarize.yaws <- function(yaws,
     return(list(from = yaws,
                 to = yaws,
                 width = 0,
-                wrap = FALSE))
+                wrap = FALSE,
+                all = list()))
   }
   
   # normalize to 0->360
@@ -88,17 +87,17 @@ summarize.yaws <- function(yaws,
   idx <- which(gaps == max(gaps))
   
   if(length(idx) > 1){
-    if(tie_action == "stop"){
-      stop('More than one smallest continuous interval found. Set `tie_action = "alternatives"` to get',
+    if(tie_action == "error"){
+      stop('More than one smallest continuous interval found. Set `tie_action = "all"` to get',
            'all possible intervals.', call. = FALSE)
     }
-    if(tie_action == "alternatives"){
+    if(tie_action == "all"){
       warning('More than one smallest continuous interval found. Returned an arbitrary possibility; see',
-      ' $alternatives for all possibilities.', call. = FALSE)
+      ' $all for all possibilities.', call. = FALSE)
     }
   }
   
-  alternatives <- list()
+  all <- list()
   
   for(k in idx){
     # values before and after gap
@@ -116,13 +115,13 @@ summarize.yaws <- function(yaws,
     # wrap TRUE when to (in -180..180) is numerically < from
     wrap <- (to < from)
     
-    alternatives <- append(alternatives,
+    all <- append(all,
                            list(list(from = from, to = to, width = width, wrap = wrap)))
   }
   
   
-  chosen <- alternatives[[1]]
-  alternatives <- alternatives[-1]
+  chosen <- all[[1]]
+  all <- all[-1]
   
   if(plot){
     
@@ -149,6 +148,6 @@ summarize.yaws <- function(yaws,
               to = chosen$to,
               width = chosen$width,
               wrap = chosen$wrap,
-              alternatives = alternatives))
+              all = all))
   
 }

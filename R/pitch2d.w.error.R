@@ -15,6 +15,17 @@
 #'  
 #' @return Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval `(-180, 180]`.
 #' 
+#' @examples
+#' 
+#' # A pitch value computed from landmark coordinates
+#' p2d <- pitch2d.from.xy(x_tip  = 100, y_tip  = 80, x_base = 110, y_base = 120)
+#'
+#' # Simulate the effect of ±1 pixel labeling uncertainty
+#' pitch2d.w.error(p2d, label_error = 1)
+#' 
+#' #' # Simulate the effect of ±5 pixel labeling uncertainty
+#' pitch2d.w.error(p2d, label_error = 5)
+#' 
 #' @seealso [pitch2d.from.xy()]
 #' @export
 pitch2d.w.error <- function(pitch2d,

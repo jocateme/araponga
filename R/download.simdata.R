@@ -158,13 +158,6 @@ download.simdata <- function(overwrite = FALSE,
     unlink(zip_path)
   }
   
-  out_dir2 <- paste0(out_dir, "2")
-  file.rename(out_dir,
-              out_dir2)
-  file.rename(file.path(out_dir2, "sim_data_parquet"),
-               out_dir)
-  unlink(out_dir2, recursive = TRUE)
-  
   out_dir <- normalizePath(dataset_dir, winslash = "/")
   if (!quiet) {
     message("Simulation dataset available at: ", out_dir)

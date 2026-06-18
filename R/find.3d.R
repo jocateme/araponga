@@ -22,9 +22,9 @@
 #'  straight toward, `180` = pointed left. Default is `NULL` (all yaws considered). Provided values are
 #'  rounded to the nearest integer.
 #' @param label_error Positive numeric scalar specifying the error (± pixels) used to perturb landmark
-#'  coordinates. Passed internally to [pitch2d.w.error()]. Optional if `length(pitch2d)` > 1.
+#'  coordinates. Passed internally to [pitch2d.w.error()]. Required if `length(pitch2d)` = 1.
 #' @param label_nsamp Positive integer scalar specifying the approximate number of grid combinations to
-#'  evaluate. Passed internally to [pitch2d.w.error()]. Optional if `length(pitch2d)` > 1.
+#'  evaluate. Passed internally to [pitch2d.w.error()]. Required if `length(pitch2d)` = 1.
 #' @param sim_download Logical scalar. If `TRUE`, the function will attempt to download the precomputed
 #'  simulation dataset automatically if it is not found in the local cache. Default is `FALSE`
 #'  (CRAN-friendly).
@@ -55,7 +55,7 @@
 #' @examples
 #' if(interactive()){
 #' 
-#' #' # hypothetical pitch2d from coordinates
+#' # hypothetical pitch2d from coordinates
 #' p2d <- pitch2d.from.xy(10, 1, -12, 20)
 #' 
 #' # pitches that project to `p2d` (± 2 pixel error) if seen from 30° (± 1° error) below

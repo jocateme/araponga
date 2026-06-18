@@ -28,8 +28,8 @@
 #' ## view_elevation between -30 and -40
 #' plot.angles(-30:-40, "view_elevation")
 #' 
-#' if(interactive()){
 #' # call with output from find.3d
+#' if(interactive()){
 #' ## pitches and yaws that project to 10° (± 1° error) if seen from 15° below
 #' df <- find.3d(9:11, find = c("pitch", "yaw"), candidate_view_elevations = -15)
 #' plot.angles(df)
@@ -71,11 +71,11 @@ plot.angles <- function(angles = NULL,
     tmp <- stats::na.omit(tmp)
     warning("NA `angles` ignored.", call. = FALSE)
   }
-  if(any(tmp <= -180 | tmp > 180)){
-    stop("All `angles` must satisfy -180 < angle <= 180 degrees.", call. = FALSE)
-  }
   if(any(!is.numeric(tmp))){
     stop("`angles` must be numeric.", call. = FALSE)
+  }
+  if(any(tmp <= -180 | tmp > 180)){
+    stop("All `angles` must satisfy -180 < angle <= 180 degrees.", call. = FALSE)
   }
   
   if(is.null(names(angles))){
