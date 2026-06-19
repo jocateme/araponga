@@ -96,7 +96,7 @@ plot.angles <- function(angles = NULL,
     
     pitches <- deg2rad(unique(pitches))
     
-    if(is.null(main)) main <- "pitch\nside view"
+    if(is.null(main)) main <- "pitch\n(side view)"
     if(is.null(col)) col <- "cadetblue"
     
     if(facing == "left"){
@@ -179,7 +179,7 @@ plot.angles <- function(angles = NULL,
     
     yaws <- deg2rad(unique(yaws))
     
-    if(is.null(main)) main <- "yaw\noverhead view"
+    if(is.null(main)) main <- "yaw\n(overhead view)"
     if(is.null(col)) col <- "salmon"
     
     if(!add){
@@ -236,7 +236,7 @@ plot.angles <- function(angles = NULL,
     
     elevations <- deg2rad(unique(elevations))
     
-    if(is.null(main)) main <- "view elevation\nside view"
+    if(is.null(main)) main <- "view elevation\n(side view)"
     if(is.null(col)) col <- "darkolivegreen"
     
     if(!add){
@@ -292,31 +292,20 @@ plot.angles <- function(angles = NULL,
     
   }
   
-  plot.elevation <- function(elevations,
-                             main = NULL,
-                             col = NULL,
-                             facing,
-                             labels,
-                             add){
+  plot.generic <- function(angles,
+                           main = NULL,
+                           col = NULL,
+                           add){
     
-    elevations <- deg2rad(unique(elevations))
     
-    if(is.null(main)) main <- "view elevation\nside view"
-    if(is.null(col)) col <- "darkolivegreen"
+    if(is.null(col)) col <- "gray50"
     
-    if(facing == "left"){
-      elevations <- pi - elevations
-    }
+    angles <- deg2rad(angles)
     
     if(!add){
-      if(facing == "right"){
-        theta <- seq(-90, 90, length.out = 200) * pi/180
-      } else {
-        theta <- seq(90, 270, length.out = 200) * pi/180
-      }
-      
-      graphics::plot(x = cos(theta),
-                     y = sin(theta),
+      theta <- seq(0, 2*pi, length.out = 400)
+      graphics::plot(x = 0 + 1 * cos(theta),
+                     y = 0 + 1 * sin(theta),
                      type = "l",
                      asp = 1,
                      xlab = "",
@@ -329,33 +318,26 @@ plot.angles <- function(angles = NULL,
     }
     
     graphics::segments(0, 0,
-                       cos(elevations),
-                       sin(elevations),
+                       0 + 1 * cos(angles),
+                       0 + 1 * sin(angles),
                        col = col,
                        lwd = 0.5)
     
     if(!add){
-      graphics::segments(1-2*(facing == "left"), 0,
-                         0, 0,
+      graphics::segments(-1, 0,
+                         1, 0,
                          lty = 2,
                          col = "#BEBEBE80")
       graphics::segments(0, -1,
                          0, 1,
                          lty = 2,
                          col = "#BEBEBE80")
-      graphics::text(x = c(cos(-pi/2), cos(0+(facing=="left")*pi), cos(pi/2)),
-                     y = c(sin(-pi/2), sin(0+(facing=="left")*pi), sin(pi/2)),
-                     labels = c("-90\u00B0", "0\u00B0 (eye level)", "90\u00B0"),
-                     pos = c(1, 4-(facing=="left")*2, 3))
-      
-      if(labels){
-        graphics::text(0, 0, "object", pos = 2+(facing=="left")*2)
-        graphics::text(mean(cos(elevations)),
-                       mean(sin(elevations)),
-                       "observer",
-                       pos = 4-(facing=="left")*2)
-      }
+      graphics::text(x = c(cos(-pi/2), cos(pi), cos(pi/2), cos(0)),
+                     y = c(sin(-pi/2), sin(pi), sin(pi/2), sin(0)),
+                     labels = c("-90\u00B0", "180\u00B0", "90\u00B0", "0\u00B0"),
+                     pos = c(1, 2, 3, 4))
     }
+    
   }
   
   old_xpd <- graphics::par()$xpd
