@@ -1,0 +1,167 @@
+---
+title: "Estimating beak aperture of a bird from video frames"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{beak-gape}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(araponga)
+```
+
+Part of, I was interested in finding out how widely bare-throated bellbirds (_Procnias nudicollis_) opened their beaks, and whether that helped them produce some of the loudest sounds among terrestrial animals.
+
+For that, I captured videos of singing male bellbirds in the Atlantic Forest of Brazil. Here's a video frame of a singing male that regularly sings in his display perch near Macuquinho Lodge:
+
+--- bellbird image ---
+
+How widely is he opening his beak? Let's find out.
+
+First, note the landmarks in the video frame: they refer to the tip and the base of the bird's upper (blue) and lower (red) mandibles. These are the image coordinates, manually labeled with SLEAP:
+
+```{r}
+
+# upper tip
+x_ut <- -718.5216072
+y_ut <- -78.5485277
+
+# upper base
+x_ub <- -782.5250905
+y_ub <- -105.2195211
+
+# lower tip
+x_lt <- -689.0089234
+y_lt <- -210.4188121
+
+# lower base
+x_lb <- -751.2784311
+y_lb <- -178.5397719
+
+```
+
+--- coordinates ---
+
+To find gape (or opening, aperture) angle, I need to first find the pitch (vertical angle relative to horizon) of each mandible and then calculate the difference between them.
+
+The first step to find pitch is to extract the projected 2D pitch of the coordinates, starting with the upper mandible:
+
+```{r}
+
+up2d <- pitch2d.from.xy(x_ut, y_ut, x_ub, y_ub, plot = TRUE)
+
+```
+
+Then the lower:
+
+```{r}
+
+lp2d <- pitch2d.from.xy(x_lt, y_lt, x_lb, y_lb, plot = TRUE)
+
+```
+
+Had the bird been filmed side-on and eye-level, projected 2D pitch would be all that's needed to find beak gape. In these conditions, the projected 2D pitch is the same as the 3D pitch, and so gape angle would simply be:
+
+```{r}
+
+cat(up2d - lp2d)
+
+```
+
+We can verify this with `find.pitch()` assuming `candidate_view_elevations = 0` (eye level) and `candidate_yaws = 0` (pointed straight right). This function necessarily takes some amount of labeling error, which I'm assuming to be ± 1 pixel error.
+
+```{r}
+
+# upper 3D pitch
+up3d <- find.pitch(up2d,
+           candidate_view_elevations = 0, # eye-level
+           candidate_yaws = 0, # side-on right
+           label_error = 1) # +- 1 px error
+
+# lower 3D pitch
+lp3d <- find.pitch(lp2d,
+           candidate_view_elevations = 0,
+           candidate_yaws = 0,
+           label_error = 1)
+
+plot.angles(up3d, "pitch")
+plot.angles(lp3d, "pitch", add = TRUE)
+
+# possible gape angles = pairwise differences between upper and lower
+sort(unique(as.vector(outer(up3d, lp3d, "-"))))
+
+```
+
+Assuming a ± 1 pixel error, gape angle would be somewhere between 46 and 53 degrees.
+
+But of course that's not real life — at least not for field biologists. And really just by looking at the video frame we know the bird is not eye-level, side-on.
+
+Indeed, I happen to have measured the angle I was observing from: -34.2.
+
+```{r}
+
+plot.angles(-34.2, type = "view_elevation", labels = TRUE)
+
+```
+
+I don't know which direction the bird was looking at, but I know it's pointed at the right side of the video so I can set `candidate_yaws` to between -90 (looking straight at me) and 90 (straigth away).
+
+```{r}
+
+plot.angles(-90:90, type = "yaw", labels = TRUE)
+
+```
+
+```{r}
+
+# upper 3D pitch
+up3d <- find.pitch(up2d,
+           candidate_view_elevations = -34.2,
+           candidate_yaws = -90:0,
+           label_error = 1,
+           paired = TRUE)
+plot.angles(up3d$pitch, "pitch")
+
+# lower 3D pitch
+lp3d <- find.pitch(lp2d,
+           candidate_view_elevations = -34.2,
+           candidate_yaws = -90:0,
+           label_error = 1,
+           paired = TRUE)
+plot.angles(lp3d$pitch, "pitch")
+
+# possible gape angles = pairwise differences on a per-yaw basis
+possible_pitches <- NULL
+for(i in unique(c(up3d$yaw, lp3d$yaw))){
+  
+  upper_rel <- up3d$pitch[up3d$yaw == i]
+  lower_rel <- lp3d$pitch[lp3d$yaw == i]
+  
+  possible_pitches <- c(possible_pitches,
+                        as.vector(outer(upper_rel, lower_rel, "-")))
+  
+}
+
+sort(unique(possible_pitches))
+
+```
+
+
+
+To do this, I explored the Atlantic Forest of Brazil looking for singing male bellbirds to film.
+
+
+- start with definitions & conventions of yaw pitch etc?
+- Load image + labels
+- Get pitch & gape (but too broad)
+- Get yaw
+- Narrow down yaw
+- Get pitch & gape again (better now)

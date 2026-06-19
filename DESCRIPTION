@@ -20,6 +20,8 @@ Imports:
 Suggests: 
     curl,
     httr,
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Encoding: UTF-8
@@ -29,3 +31,4 @@ Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0
 URL: https://github.com/jocateme/araponga
 BugReports: https://github.com/jocateme/araponga/issues
+VignetteBuilder: knitr
