@@ -46,8 +46,6 @@ download.simdata()
 ```
 
 The dataset is cached locally and reused in future sessions.
-Alternatively, `find.3d()`, `find.pitch()`, and `find.yaw()` can attempt
-to download it automatically if called with `sim_download = TRUE`.
 
 ## Basic workflow
 
@@ -60,10 +58,11 @@ First, use two landmarks — a base and a tip — to calculate the projected
 
 ``` r
 p2d <- pitch2d.from.xy(
-  x_tip = 1,
-  y_tip = 1,
+  x_tip = 10,
+  y_tip = 20,
   x_base = 0,
-  y_base = 0
+  y_base = 0,
+  plot = TRUE
 )
 ```
 
@@ -83,6 +82,7 @@ possible_pitches <- find.pitch(
   candidate_yaws = -30:0,
   label_error = 1
 )
+plot.angles(possible_pitches, type = "pitch")
 ```
 
 Using the same 2D projection, we can ask which yaws (left-right
@@ -95,9 +95,10 @@ possible_yaws <- find.yaw(
   candidate_pitches = 0:90,
   label_error = 1
 )
+plot.angles(possible_yaws, type = "yaw")
 ```
 
-The important point is that the`candidate_...` arguments define which 3D
+An important point is that the`candidate_...` arguments define which 3D
 configurations are considered plausible before compatible angles are
 returned.
 
