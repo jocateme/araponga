@@ -1,6 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/jocateme/araponga/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jocateme/araponga/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 # `araponga`: estimating 3D orientations from 2D landmarks in R
 
 `araponga` is for you if you need to estimate the 3D orientations
