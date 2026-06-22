@@ -19,6 +19,9 @@ pitch angle. Plotting is only supported for single base-tip pair.}
 \value{
 Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
 Convention: \code{0} points right, \code{90} points up, \code{-90} points down, \code{180} points left.
+
+Scalar outputs also include an \code{"xy"} attribute containing the input
+coordinates, which makes it directly compatible with \code{\link[=find.3d]{find.3d()}}.
 }
 \description{
 Compute the 2D pitch angle defined by two landmarks: a tip point and a base point.

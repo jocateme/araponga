@@ -10,8 +10,11 @@
 #' @param plot Logical scalar. `TRUE` draws a diagnostic plot with base-tip segment and calculated 2D
 #'  pitch angle. Plotting is only supported for single base-tip pair.
 #'
-#' @return Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
+#' @returns Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
 #'  Convention: `0` points right, `90` points up, `-90` points down, `180` points left.
+#'
+#'  Scalar outputs also include an `"xy"` attribute containing the input
+#'  coordinates, which makes it directly compatible with [find.3d()].
 #'  
 #' @details
 #' The calculation uses the two-landmark vector

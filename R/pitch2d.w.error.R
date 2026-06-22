@@ -13,7 +13,7 @@
 #'  and `180` are added when the simulated set spans them. This is useful when working with the returned
 #'  angles individually, since these boundary values can behave differently from interior values.
 #'  
-#' @return Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval `(-180, 180]`.
+#' @returns Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval `(-180, 180]`.
 #' 
 #' @examples
 #' 

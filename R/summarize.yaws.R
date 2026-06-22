@@ -11,7 +11,7 @@
 #'  continuous intervals exist. `"all"` (default) issues a warning and returns all possible intervals
 #'  (see Value), while "`error`" issues an error.
 #'
-#' @return A named `list` with components:
+#' @returns A named `list` with components:
 #' \describe{
 #'   \item{from}{numeric scalar: interval start (clockwise-most endpoint), in degrees.}
 #'   \item{to}{numeric scalar: interval end (counterclockwise-most endpoint), in degrees.}

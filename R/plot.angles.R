@@ -21,6 +21,8 @@
 #' @param add Logical scalar (default `FALSE`): should angle segments be added to the current plotting
 #'  device?
 #' 
+#' @returns No return value.
+#' 
 #' @examples
 #' # calls with a vector
 #' ## pitch between 60 and 70
@@ -145,7 +147,9 @@ plot.angles <- function(angles = NULL,
 #'  Choices are `"pitch"`, `"yaw"`, and `"view_elevation"`. Default plots all.
 #'
 #' @seealso [plot.angles()]
-#'
+#' 
+#' @returns No return value.
+#' 
 #' @examples
 #' 
 #' conventions()

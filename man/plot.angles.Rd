@@ -38,6 +38,9 @@ should be facing for \code{pitch} and \code{view_elevation}.}
 \item{add}{Logical scalar (default \code{FALSE}): should angle segments be added to the current plotting
 device?}
 }
+\value{
+No return value.
+}
 \description{
 Plotting helper for quick visual inspection of angles, in particular pitches, yaws, and view
 elevations.

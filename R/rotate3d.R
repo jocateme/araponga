@@ -11,7 +11,7 @@
 #' @param roll Numeric scalar: angle in degrees for rotation about the X axis. Defaults to `0`
 #'  (no rotation).
 #'
-#' @return A numeric 3×3 matrix (class `matrix`).
+#' @returns A numeric 3×3 matrix (class `matrix`).
 #'
 #' @examples
 #' # rotate 45 about z, then 30 about y, then -80 about x

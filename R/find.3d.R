@@ -31,7 +31,7 @@
 #' @param paired Logical scalar. If `TRUE`, a `data.frame` of yaws mapped to pitches will be returned; if
 #'  `FALSE` (default), a vector of yaws or pitches.
 #'
-#' @return A `data.frame` with all or a subset of the following columns:
+#' @returns A `data.frame` with all or a subset of the following columns:
 #' \describe{
 #'   \item{pitch}{integer: pitch angles (degrees) compatible with the provided arguments.}
 #'   \item{yaw}{integer: yaw angles (degrees) compatible with the provided arguments.}

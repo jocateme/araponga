@@ -23,12 +23,10 @@ with its 2D projection.
 
 ## Installation
 
-You can install the development version of `araponga` from
-[GitHub](https://github.com/jocateme/araponga) with:
+You can install `araponga` from CRAN:
 
 ``` r
-# install.packages("pak")
-pak::pak("jocateme/araponga")
+install.packages("araponga")
 ```
 
 Then load the package:

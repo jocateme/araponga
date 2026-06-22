@@ -1,14 +1,15 @@
 Package: araponga
-Title: Estimating 3D Angles from 2D Landmarks
+Title: Estimate 3D Orientations from 2D Landmarks
 Version: 0.1-0
 Date: 2026-03-19
 Authors@R: 
-    person("João C T", "Menezes", "", "jocateme@gmail.com", role = c("aut", "cre"),
+    person("João C T", "Menezes", "", "jocateme@gmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-4156-2934"))
-Description: This package allows users to extract 3D orientations
-    (left/right, up/down) of an object based on 2D image coordinates of
-    two landmarks and the (approximate) elevation angle between camera and
-    object.
+Description: Estimates possible 3D orientations of an object from the 2D image coordinates 
+    of two landmarks and an approximate camera-object elevation angle. Because a projected 
+    2D angle can be compatible with multiple 3D pitch, yaw, and view-elevation angles, the 
+    package returns compatible sets of orientations rather than a single unconstrained 
+    estimate.
 License: GPL (>= 3)
 Depends:
     R (>= 4.0.0)

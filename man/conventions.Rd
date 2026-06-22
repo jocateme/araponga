@@ -8,7 +8,10 @@ conventions(type = c("pitch", "yaw", "view_elevation"))
 }
 \arguments{
 \item{type}{Character vector specifying which convention plot(s) to draw.
-Choices are \code{"pitch"}, \code{"yaw"}, and \code{"elevation"}. Default plots all.}
+Choices are \code{"pitch"}, \code{"yaw"}, and \code{"view_elevation"}. Default plots all.}
+}
+\value{
+No return value.
 }
 \description{
 Quick visual reminders of the angle conventions used by \code{araponga}.
@@ -18,7 +21,6 @@ Quick visual reminders of the angle conventions used by \code{araponga}.
 conventions()
 
 conventions("yaw")
-
 
 }
 \seealso{

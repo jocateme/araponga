@@ -1,5 +1,5 @@
 ---
-title: "From 2D landmarks to 3D angles: the `araponga` workflow"
+title: "From 2D landmarks to 3D orientantions: the `araponga` workflow"
 author: "João C. T. Menezes"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
@@ -35,7 +35,7 @@ library(araponga)
 
 The central challenge is that a 2D projection does not uniquely determine a 3D angle: the same apparent orientation in an image can be produced by many combinations of true orientation, camera position, and viewing angle. Instead of returning a single potentially misleading estimate, `araponga` returns the set of 3D angles consistent with the available information.
 
-This vignette introduces the main `araponga` workflow using a real example: estimating how widely bare-throated bellbirds (_Procnias nudicollis_) open their beaks while producing some of the loudest sounds recorded among birds.
+This vignette introduces the main `araponga` workflow using a real example: estimating how widely bare-throated bellbirds — "araponga", in Brazil — open their beaks while producing some of the loudest sounds recorded among birds.
 
 The general workflow is:
 

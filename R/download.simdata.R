@@ -8,7 +8,7 @@
 #' @param quiet Logical scalar. If `TRUE`, suppress download progress and nonessential messages
 #'  where supported by the underlying downloader.
 #'
-#' @return An invisible character scalar giving the normalized path to the extracted simulation
+#' @returns An invisible character scalar giving the normalized path to the extracted simulation
 #' dataset directory.
 #'
 #' @details

@@ -16,7 +16,7 @@
 #' @param plot Logical scalar. `TRUE` draws a diagnostic plot with original and rotated axes,
 #'  and calculated 2D pitch angle. 
 #'
-#' @return Numeric scalar: 2D pitch angle, in degrees, in the interval (-180°, 180°].
+#' @returns Numeric scalar: 2D pitch angle, in degrees, in the interval (-180°, 180°].
 #'  Convention: `0` points right, `90` points up, `-90` points down, `180` points left.
 #'
 #' @details

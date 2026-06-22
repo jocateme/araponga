@@ -19,7 +19,7 @@
 #' @param plot Logical scalar. `TRUE` draws diagnostic plots with retained (green) and excluded
 #'  (red) angles for each set. 
 #'
-#' @return A \code{list} with elements:
+#' @returns A \code{list} with elements:
 #' \describe{
 #'   \item{trimmed_ccw_yaws}{numeric: subset of `ccw_yaws` that have at least one matching `cw_yaws`.}
 #'   \item{trimmed_cw_yaws}{numeric: subset of `cw_yaws` that have at least one matching `ccw_yaws`.}
