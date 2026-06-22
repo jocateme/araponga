@@ -136,12 +136,17 @@ We can verify this with `find.pitch()` by specifying `candidate_view_elevations 
 > **Important**
 > The returned angles are not “the true angle”; they are the angles compatible with the observed 2D projection, labeling error, and candidate constraints.
 
-```{r}
+```{r, eval = FALSE}
 upper_pitch <- find.pitch(upper_p2d,
                    candidate_view_elevations = 0,
                    candidate_yaws = 0,
                    label_error = 1)
-
+```
+```{r, echo = FALSE}
+# "find" functions aren't CRAN-friendly
+upper_pitch <- 21:24
+```
+```{r}
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -154,10 +159,14 @@ But of course that's not real life — at least not for field biologists. Just b
 
 If we provide no information about viewing geometry, many 3D pitch orientations remain possible:
 
-```{r}
+```{r, eval = FALSE}
 upper_pitch <- find.pitch(upper_p2d,
                    label_error = 1)
-
+```
+```{r, echo = FALSE}
+upper_pitch <- -89:89
+```
+```{r}
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -180,11 +189,15 @@ plot.angles(measured_elevation,
 
 Including this information narrows the possible pitches:
 
-```{r}
+```{r, eval = FALSE}
 upper_pitch <- find.pitch(upper_p2d,
                    candidate_view_elevations = measured_elevation,
                    label_error = 1)
-
+```
+```{r, echo = FALSE}
+upper_pitch <- -33:41
+```
+```{r}
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -206,12 +219,16 @@ plot.angles(assumed_yaw,
 
 and include it for pitch estimation:
 
-```{r}
+```{r, eval = FALSE}
 upper_pitch <- find.pitch(upper_p2d,
                    candidate_view_elevations = measured_elevation,
                    candidate_yaws = assumed_yaw,
                    label_error = 1)
-
+```
+```{r, echo = FALSE}
+upper_pitch <- -8:29
+```
+```{r}
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -220,14 +237,18 @@ Now the possible pitch range is much narrower. Importantly, this is not because 
 
 Let's repeat the process for the lower mandible:
 
-```{r}
+```{r, eval = FALSE}
 lower_p2d <- pitch2d.from.xy(x_lt, y_lt, x_lb, y_lb)
 
 lower_pitch <- find.pitch(lower_p2d,
                    candidate_view_elevations = measured_elevation,
                    candidate_yaws = assumed_yaw,
                    label_error = 1)
-
+```
+```{r, echo = FALSE}
+lower_pitch <- -43:-30
+```
+```{r}
 lower_pitch
 ```
 
@@ -251,7 +272,7 @@ Given our assumptions, the possible gape angles range from 22° to 72°.
 
 This calculation allows any possible upper mandible pitch to combine with any possible lower mandible pitch. If we assume the beak opens in a vertical plane — i.e., if the head is not tilted sideways, a reasonable assumption for singing bellbirds —, we can extract possible gapes on a per-yaw basis. The `paired` argument in `find.pitch()` facilitates that:
 
-```{r}
+```{r, eval = FALSE}
 upper_pitch_paired <- find.pitch(upper_p2d,
            candidate_view_elevations = measured_elevation,
            candidate_yaws = assumed_yaw,
@@ -265,15 +286,9 @@ lower_pitch_paired <- find.pitch(lower_p2d,
            paired = TRUE)
 ```
 
-`paired = TRUE` gives us a data frame with the possible pitches for each possible yaw.
+`paired = TRUE` gives us a data frame with the possible pitches for each possible yaw. Let's extract per-yaw possible gapes and pool them:
 
-```{r}
-str(upper_pitch_paired)
-```
-
-Let's extract per-yaw possible gapes and pool them:
-
-```{r}
+```{r, eval = FALSE}
 all_yaws <- unique(c(upper_pitch_paired$yaw, lower_pitch_paired$yaw))
 
 per_yaw_gapes <- NULL
@@ -286,6 +301,11 @@ for(y in all_yaws){
 }
 
 per_yaw_gapes <- sort(unique(per_yaw_gapes))
+```
+```{r, echo = FALSE}
+per_yaw_gapes <- 34:63
+```
+```{r}
 per_yaw_gapes
 ```
 
@@ -297,24 +317,32 @@ We can apply a similar workflow to estimate the yaw at which the bellbird is sin
 
 To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenient wrapper to the generic `find.3d()`. Let's start by assuming the upper mandible always opens approximately upward:
 
-```{r}
+```{r, eval = FALSE}
 upper_yaw <- find.yaw(upper_p2d,
            candidate_view_elevations = measured_elevation,
            candidate_pitches = -20:90,
            label_error = 1)
-
+```
+```{r, echo = FALSE}
+upper_yaw <- c(-64:80, 83:84, 87)
+```
+```{r}
 upper_yaw
 plot.angles(upper_yaw, "yaw")
 ```
 
 and the lower mandible approximately downward:
 
-```{r}
+```{r, eval = FALSE}
 lower_yaw <- find.yaw(lower_p2d,
            candidate_view_elevations = measured_elevation,
            candidate_pitches = -90:20,
            label_error = 1)
-
+```
+```{r, echo = FALSE}
+lower_yaw <- c(-85, -82, -80:-78, -76:67)
+```
+```{r}
 lower_yaw
 plot.angles(lower_yaw, "yaw")
 ```
@@ -330,7 +358,7 @@ We can go one step further. Some yaw values may be possible for both mandibles i
 
 To test this, we can again use `paired = TRUE` to preserve which pitches are possible under each yaw:
 
-```{r}
+```{r, eval = FALSE}
 upper_yaw_paired <- find.yaw(upper_p2d,
            candidate_view_elevations = measured_elevation,
            candidate_pitches = -20:90,
@@ -354,10 +382,15 @@ for(i in seq_along(max_gape_per_yaw$yaw)){
   
   max_gape_per_yaw$gape[i] <- max(outer(rel_upper_pitch, rel_lower_pitch, "-"))
 }
-
+```
+```{r, echo = FALSE}
+max_gape_per_yaw <- data.frame(yaw = both_yaw,
+                               gape = 10)
+```
+```{r}
 yaw <- max_gape_per_yaw$yaw[max_gape_per_yaw$gape >= 0]
 
-any(max_gape_per_yaw$max_gape < 0)
+any(max_gape_per_yaw$gape < 0)
 ```
 
 No yaw was excluded in this example, but this illustrates how information about your system can be used to remove unrealistic orientations.

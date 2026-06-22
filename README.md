@@ -1,28 +1,30 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# araponga: estimating 3D angles from 2D landmarks in R
+# `araponga`: estimating 3D orientations from 2D landmarks in R
 
-`araponga` estimates possible 3D orientations of objects from 2D
-landmarks in images or videos.
+`araponga` is for you if you need to estimate the 3D orientations
+(left-right, up-down) of an object from images. It is especially useful
+when you know - or can reasonably estimate - the view elevation from
+which the object was photographed.
 
 The central problem is that a 2D projection does not uniquely determine
 a 3D angle: the same apparent orientation in an image can be produced by
 many combinations of true orientation, camera position, and viewing
 angle. Instead of returning a single potentially misleading estimate,
-araponga returns the set of 3D angles compatible with the observed 2D
+`araponga` returns the set of 3D angles compatible with the observed 2D
 projection and any user-provided constraints.
 
 The package was originally developed to estimate beak gape angles in
 singing birds, but the workflow is general: if an object can be
-represented by a base landmark and a tip landmark, araponga can help
+represented by a base landmark and a tip landmark, `araponga` can help
 explore which 3D pitch, yaw, and view elevation angles are compatible
 with its 2D projection.
 
 ## Installation
 
 You can install the development version of `araponga` from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com/jocateme/araponga) with:
 
 ``` r
 # install.packages("pak")
@@ -51,7 +53,7 @@ The dataset is cached locally and reused in future sessions.
 
 The general workflow is:
 
-`2D landmarks -> projected 2D pitch -> constrained 3D search -> compatible angles`
+`2D landmarks -> projected 2D pitch -> constrained 3D search -> compatible 3D angles`
 
 First, use two landmarks — a base and a tip — to calculate the projected
 2D pitch:
@@ -71,28 +73,28 @@ If the object was photographed perfectly side-on and at eye level, this
 3D orientations can produce the same 2D projection, which is why
 `araponga` exists.
 
-The output from `pitch2d.from.xy()` can then be used to ask which 3D
-pitches (up-down orientation) are compatible with the image, given
-assumptions about view elevation, 3D orientations, and landmark error:
+The output from `pitch2d.from.xy()` can then be used to ask, for
+example, which 3D pitches (up-down orientation) are compatible with the
+image, given assumptions about view elevation, yaw, and landmark error:
 
 ``` r
 possible_pitches <- find.pitch(
   p2d,
-  candidate_view_elevations = -35:-25,
-  candidate_yaws = -30:0,
-  label_error = 1
+  candidate_view_elevations = -35:-25, # assume object seen from 25-35 below
+  candidate_yaws = -30:0, # side-on to slightly facing camera
+  label_error = 1 # ± 1 px labeling error
 )
 plot.angles(possible_pitches, type = "pitch")
 ```
 
-Using the same 2D projection, we can ask which yaws (left-right
+Using the same 2D projection, we can also ask which yaws (left-right
 orientation) are compatible with the image:
 
 ``` r
 possible_yaws <- find.yaw(
   p2d,
   candidate_view_elevations = -35:-25,
-  candidate_pitches = 0:90,
+  candidate_pitches = 0:90, # horizontal to straight up
   label_error = 1
 )
 plot.angles(possible_yaws, type = "yaw")
@@ -124,7 +126,7 @@ returned.
 
 ## Learn more
 
-For a full worked example, see the package vignette:
+For package conventions and a full worked example, see the vignette:
 
 ``` r
 vignette("araponga")
