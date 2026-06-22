@@ -82,263 +82,9 @@ plot.angles <- function(angles = NULL,
     names(angles) <- rep("", length(angles))
   }
   
-  
   n <- length(angles)
   if(!is.null(col)) col <- rep(col, length.out = n)
   if(!is.null(main)) main <- rep(main, length.out = n)
-  
-  plot.pitch <- function(pitches,
-                         main = NULL,
-                         col = NULL,
-                         facing,
-                         labels,
-                         add){
-    
-    pitches <- deg2rad(unique(pitches))
-    
-    if(is.null(main)) main <- "pitch\n(side view)"
-    if(is.null(col)) col <- "cadetblue"
-    
-    if(facing == "left"){
-      pitches <- pi - pitches
-    }
-    
-    if(!add){
-      if(any(abs(pitches) > pi/2)){
-        theta <- seq(0, 2*pi, length.out = 400)
-      } else {
-        if(facing == "right"){
-          theta <- seq(-90, 90, length.out = 200) * pi/180
-        } else {
-          theta <- seq(90, 270, length.out = 200) * pi/180
-        }
-      }
-      
-      graphics::plot(x = cos(theta),
-                     y = sin(theta),
-                     type = "l",
-                     asp = 1,
-                     xlab = "",
-                     ylab = "",
-                     bty = "n",
-                     xaxt = "n",
-                     yaxt = "n",
-                     col = "gray50",
-                     main = main)
-    }
-    
-    graphics::segments(0, 0,
-                       cos(pitches),
-                       sin(pitches),
-                       col = col,
-                       lwd = 0.5)
-    
-    if(!add){
-      graphics::segments(1-2*(facing == "left"), 0,
-                         0, 0,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::segments(0, -1,
-                         0, 1,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      
-      if(any(abs(pitches) > pi/2)){
-        graphics::segments(0, 0,
-                           -1+2*(facing == "left"), 0,
-                           lty = 2,
-                           col = "#BEBEBE80")
-        graphics::text(x = cos(pi-(facing=="left")*pi),
-                       y = sin(pi-(facing=="left")*pi),
-                       labels = "180\u00B0",
-                       pos = 2+(facing=="left")*2)
-      }
-      
-      graphics::text(x = c(cos(-pi/2), cos(0+(facing=="left")*pi), cos(pi/2)),
-                     y = c(sin(-pi/2), sin(0+(facing=="left")*pi), sin(pi/2)),
-                     labels = c("-90\u00B0", "0\u00B0 (horizon)", "90\u00B0"),
-                     pos = c(1, 4-(facing=="left")*2, 3))
-      
-    }
-    
-    if(labels){
-      graphics::text(0, 0, "base", pos = 2+(facing=="left")*2)
-      graphics::text(mean(cos(pitches)),
-                     mean(sin(pitches)),
-                     "tip",
-                     pos = 4-(facing=="left")*2)
-    }
-    
-  }
-  
-  plot.yaw <- function(yaws,
-                       main = NULL,
-                       col = NULL,
-                       labels,
-                       add){
-    
-    yaws <- deg2rad(unique(yaws))
-    
-    if(is.null(main)) main <- "yaw\n(overhead view)"
-    if(is.null(col)) col <- "salmon"
-    
-    if(!add){
-      theta <- seq(0, 2*pi, length.out = 400)
-      graphics::plot(x = 0 + 1 * cos(theta),
-                     y = 0 + 1 * sin(theta),
-                     type = "l",
-                     asp = 1,
-                     xlab = "",
-                     ylab = "",
-                     bty = "n",
-                     xaxt = "n",
-                     yaxt = "n",
-                     col = "gray50",
-                     main = main)
-    }
-    
-    graphics::segments(0, 0,
-                       0 + 1 * cos(yaws),
-                       0 + 1 * sin(yaws),
-                       col = col,
-                       lwd = 0.5)
-    if(!add){
-      graphics::segments(-1, 0,
-                         1, 0,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::segments(0, -1,
-                         0, 1,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::text(x = c(cos(-pi/2), cos(pi), cos(pi/2), cos(0)),
-                     y = c(sin(-pi/2), sin(pi), sin(pi/2), sin(0)),
-                     labels = c("-90\u00B0 (camera)", "180\u00B0", "90\u00B0", "0\u00B0"),
-                     pos = c(1, 2, 3, 4))
-    }
-    
-    if(labels){
-      graphics::text(0, 0, "base", pos = 2)
-      graphics::text(mean(cos(yaws)),
-                     mean(sin(yaws)),
-                     "tip",
-                     pos = 4)
-    }
-    
-  }
-  
-  plot.elevation <- function(elevations,
-                             main = NULL,
-                             col = NULL,
-                             facing,
-                             labels,
-                             add){
-    
-    elevations <- deg2rad(unique(elevations))
-    
-    if(is.null(main)) main <- "view elevation\n(side view)"
-    if(is.null(col)) col <- "darkolivegreen"
-    
-    if(!add){
-      
-      if(facing == "right"){
-        theta <- seq(-90, 90, length.out = 200) * pi/180
-      } else {
-        theta <- seq(90, 270, length.out = 200) * pi/180
-        elevations <- pi - elevations
-      }
-      
-      graphics::plot(x = 0 + 1 * cos(theta),
-                     y = 0 + 1 * sin(theta),
-                     type = "l",
-                     asp = 1,
-                     xlab = "",
-                     ylab = "",
-                     bty = "n",
-                     xaxt = "n",
-                     yaxt = "n",
-                     col = "gray50",
-                     main = main)
-      
-    }
-    
-    graphics::segments(0, 0,
-                       0 + 1 * cos(elevations),
-                       0 + 1 * sin(elevations),
-                       col = col,
-                       lwd = 0.5)
-    if(!add){
-      graphics::segments(1-2*(facing == "left"), 0,
-                         0, 0,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::segments(0, -1,
-                         0, 1,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::text(x = c(cos(-pi/2), cos(0+(facing=="left")*pi), cos(pi/2)),
-                     y = c(sin(-pi/2), sin(0+(facing=="left")*pi), sin(pi/2)),
-                     labels = c("-90\u00B0", "0\u00B0 (eye level)", "90\u00B0"),
-                     pos = c(1, 4-(facing=="left")*2, 3))
-    }
-    
-    if(labels){
-      graphics::text(0, 0, "object", pos = 2+(facing=="left")*2)
-      graphics::text(mean(cos(elevations)),
-                     mean(sin(elevations)),
-                     "observer",
-                     pos = 4-(facing=="left")*2)
-    }
-    
-  }
-  
-  plot.generic <- function(angles,
-                           main = NULL,
-                           col = NULL,
-                           add){
-    
-    
-    if(is.null(col)) col <- "gray50"
-    
-    angles <- deg2rad(angles)
-    
-    if(!add){
-      theta <- seq(0, 2*pi, length.out = 400)
-      graphics::plot(x = 0 + 1 * cos(theta),
-                     y = 0 + 1 * sin(theta),
-                     type = "l",
-                     asp = 1,
-                     xlab = "",
-                     ylab = "",
-                     bty = "n",
-                     xaxt = "n",
-                     yaxt = "n",
-                     col = "gray50",
-                     main = main)
-    }
-    
-    graphics::segments(0, 0,
-                       0 + 1 * cos(angles),
-                       0 + 1 * sin(angles),
-                       col = col,
-                       lwd = 0.5)
-    
-    if(!add){
-      graphics::segments(-1, 0,
-                         1, 0,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::segments(0, -1,
-                         0, 1,
-                         lty = 2,
-                         col = "#BEBEBE80")
-      graphics::text(x = c(cos(-pi/2), cos(pi), cos(pi/2), cos(0)),
-                     y = c(sin(-pi/2), sin(pi), sin(pi/2), sin(0)),
-                     labels = c("-90\u00B0", "180\u00B0", "90\u00B0", "0\u00B0"),
-                     pos = c(1, 2, 3, 4))
-    }
-    
-  }
   
   old_xpd <- graphics::par()$xpd
   old_ask <- graphics::par()$ask
@@ -353,39 +99,322 @@ plot.angles <- function(angles = NULL,
     }
     
     if(names(angles)[i] == "pitch"){
-      plot.pitch(pitches = angles[[i]],
-                 main = main[i],
-                 col = col[i],
-                 facing = facing,
-                 labels = labels,
-                 add = add)
+      .plot.pitch(pitches = angles[[i]],
+                  main = main[i],
+                  col = col[i],
+                  facing = facing,
+                  labels = labels,
+                  add = add)
       next
     }
     
     if(names(angles)[i] == "yaw"){
-      plot.yaw(yaws = angles[[i]],
-               main = main[i],
-               col = col[i],
-               labels = labels,
-               add = add)
+      .plot.yaw(yaws = angles[[i]],
+                main = main[i],
+                col = col[i],
+                labels = labels,
+                add = add)
       next
     }
     
     if(names(angles)[i] == "view_elevation"){
-      plot.elevation(elevations = angles[[i]],
-                     main = main[i],
-                     col = col[i],
-                     facing = facing,
-                     labels = labels,
-                     add = add)
+      .plot.elevation(elevations = angles[[i]],
+                      main = main[i],
+                      col = col[i],
+                      facing = facing,
+                      labels = labels,
+                      add = add)
       next
     }
     
-    plot.generic(angles = angles[[i]],
-                 main = main[i],
-                 col = col[i],
-                 add = add)
+    .plot.generic(angles = angles[[i]],
+                  main = main[i],
+                  col = col[i],
+                  add = add)
     
+  }
+  
+}
+
+#' Plot angle conventions
+#'
+#' @description
+#' Quick visual reminders of the angle conventions used by `araponga`.
+#'
+#' @param type Character vector specifying which convention plot(s) to draw.
+#'  Choices are `"pitch"`, `"yaw"`, and `"view_elevation"`. Default plots all.
+#'
+#' @seealso [plot.angles()]
+#'
+#' @examples
+#' 
+#' conventions()
+#' 
+#' conventions("yaw")
+#'
+#' @export
+conventions <- function(type = c("pitch", "yaw", "view_elevation")){
+  
+  type <- match.arg(type, several.ok = TRUE)
+  
+  list <- rep(list(0), length(type))
+  names(list) <- type
+  
+  plot.angles(angles = list,
+              col = "transparent",
+              labels = FALSE)
+  
+}
+
+.plot.pitch <- function(pitches,
+                       main = NULL,
+                       col = NULL,
+                       facing,
+                       labels,
+                       add){
+  
+  pitches <- deg2rad(unique(pitches))
+  
+  if(is.null(main)) main <- "pitch\n(side view)"
+  if(is.null(col)) col <- "cadetblue"
+  
+  if(facing == "left"){
+    pitches <- pi - pitches
+  }
+  
+  if(!add){
+    if(any(abs(pitches) > pi/2)){
+      theta <- seq(0, 2*pi, length.out = 400)
+    } else {
+      if(facing == "right"){
+        theta <- seq(-90, 90, length.out = 200) * pi/180
+      } else {
+        theta <- seq(90, 270, length.out = 200) * pi/180
+      }
+    }
+    
+    graphics::plot(x = cos(theta),
+                   y = sin(theta),
+                   type = "l",
+                   asp = 1,
+                   xlab = "",
+                   ylab = "",
+                   bty = "n",
+                   xaxt = "n",
+                   yaxt = "n",
+                   col = "gray50",
+                   main = main)
+  }
+  
+  graphics::segments(0, 0,
+                     cos(pitches),
+                     sin(pitches),
+                     col = col,
+                     lwd = 0.5)
+  
+  if(!add){
+    graphics::segments(1-2*(facing == "left"), 0,
+                       0, 0,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::segments(0, -1,
+                       0, 1,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    
+    if(any(abs(pitches) > pi/2)){
+      graphics::segments(0, 0,
+                         -1+2*(facing == "left"), 0,
+                         lty = 2,
+                         col = "#BEBEBE80")
+      graphics::text(x = cos(pi-(facing=="left")*pi),
+                     y = sin(pi-(facing=="left")*pi),
+                     labels = "180\u00B0",
+                     pos = 2+(facing=="left")*2)
+    }
+    
+    graphics::text(x = c(cos(-pi/2), cos(0+(facing=="left")*pi), cos(pi/2)),
+                   y = c(sin(-pi/2), sin(0+(facing=="left")*pi), sin(pi/2)),
+                   labels = c("-90\u00B0", "0\u00B0 (horizon)", "90\u00B0"),
+                   pos = c(1, 4-(facing=="left")*2, 3))
+    
+  }
+  
+  if(labels){
+    graphics::text(0, 0, "base", pos = 2+(facing=="left")*2)
+    graphics::text(mean(cos(pitches)),
+                   mean(sin(pitches)),
+                   "tip",
+                   pos = 4-(facing=="left")*2)
+  }
+  
+}
+
+.plot.yaw <- function(yaws,
+                     main = NULL,
+                     col = NULL,
+                     labels,
+                     add){
+  
+  yaws <- deg2rad(unique(yaws))
+  
+  if(is.null(main)) main <- "yaw\n(overhead view)"
+  if(is.null(col)) col <- "salmon"
+  
+  if(!add){
+    theta <- seq(0, 2*pi, length.out = 400)
+    graphics::plot(x = 0 + 1 * cos(theta),
+                   y = 0 + 1 * sin(theta),
+                   type = "l",
+                   asp = 1,
+                   xlab = "",
+                   ylab = "",
+                   bty = "n",
+                   xaxt = "n",
+                   yaxt = "n",
+                   col = "gray50",
+                   main = main)
+  }
+  
+  graphics::segments(0, 0,
+                     0 + 1 * cos(yaws),
+                     0 + 1 * sin(yaws),
+                     col = col,
+                     lwd = 0.5)
+  if(!add){
+    graphics::segments(-1, 0,
+                       1, 0,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::segments(0, -1,
+                       0, 1,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::text(x = c(cos(-pi/2), cos(pi), cos(pi/2), cos(0)),
+                   y = c(sin(-pi/2), sin(pi), sin(pi/2), sin(0)),
+                   labels = c("-90\u00B0 (camera)", "180\u00B0", "90\u00B0", "0\u00B0"),
+                   pos = c(1, 2, 3, 4))
+  }
+  
+  if(labels){
+    graphics::text(0, 0, "base", pos = 2)
+    graphics::text(mean(cos(yaws)),
+                   mean(sin(yaws)),
+                   "tip",
+                   pos = 4)
+  }
+  
+}
+
+.plot.elevation <- function(elevations,
+                           main = NULL,
+                           col = NULL,
+                           facing,
+                           labels,
+                           add){
+  
+  elevations <- deg2rad(unique(elevations))
+  
+  if(is.null(main)) main <- "view elevation\n(side view)"
+  if(is.null(col)) col <- "darkolivegreen"
+  
+  if(!add){
+    
+    if(facing == "right"){
+      theta <- seq(-90, 90, length.out = 200) * pi/180
+    } else {
+      theta <- seq(90, 270, length.out = 200) * pi/180
+      elevations <- pi - elevations
+    }
+    
+    graphics::plot(x = 0 + 1 * cos(theta),
+                   y = 0 + 1 * sin(theta),
+                   type = "l",
+                   asp = 1,
+                   xlab = "",
+                   ylab = "",
+                   bty = "n",
+                   xaxt = "n",
+                   yaxt = "n",
+                   col = "gray50",
+                   main = main)
+    
+  }
+  
+  graphics::segments(0, 0,
+                     0 + 1 * cos(elevations),
+                     0 + 1 * sin(elevations),
+                     col = col,
+                     lwd = 0.5)
+  if(!add){
+    graphics::segments(1-2*(facing == "left"), 0,
+                       0, 0,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::segments(0, -1,
+                       0, 1,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::text(x = c(cos(-pi/2), cos(0+(facing=="left")*pi), cos(pi/2)),
+                   y = c(sin(-pi/2), sin(0+(facing=="left")*pi), sin(pi/2)),
+                   labels = c("-90\u00B0", "0\u00B0 (eye level)", "90\u00B0"),
+                   pos = c(1, 4-(facing=="left")*2, 3))
+  }
+  
+  if(labels){
+    graphics::text(0, 0, "object", pos = 2+(facing=="left")*2)
+    graphics::text(mean(cos(elevations)),
+                   mean(sin(elevations)),
+                   "observer",
+                   pos = 4-(facing=="left")*2)
+  }
+  
+}
+
+.plot.generic <- function(angles,
+                         main = NULL,
+                         col = NULL,
+                         add){
+  
+  
+  if(is.null(col)) col <- "gray50"
+  
+  angles <- deg2rad(angles)
+  
+  if(!add){
+    theta <- seq(0, 2*pi, length.out = 400)
+    graphics::plot(x = 0 + 1 * cos(theta),
+                   y = 0 + 1 * sin(theta),
+                   type = "l",
+                   asp = 1,
+                   xlab = "",
+                   ylab = "",
+                   bty = "n",
+                   xaxt = "n",
+                   yaxt = "n",
+                   col = "gray50",
+                   main = main)
+  }
+  
+  graphics::segments(0, 0,
+                     0 + 1 * cos(angles),
+                     0 + 1 * sin(angles),
+                     col = col,
+                     lwd = 0.5)
+  
+  if(!add){
+    graphics::segments(-1, 0,
+                       1, 0,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::segments(0, -1,
+                       0, 1,
+                       lty = 2,
+                       col = "#BEBEBE80")
+    graphics::text(x = c(cos(-pi/2), cos(pi), cos(pi/2), cos(0)),
+                   y = c(sin(-pi/2), sin(pi), sin(pi/2), sin(0)),
+                   labels = c("-90\u00B0", "180\u00B0", "90\u00B0", "0\u00B0"),
+                   pos = c(1, 2, 3, 4))
   }
   
 }

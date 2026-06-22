@@ -53,6 +53,13 @@ The general workflow is:
 
 `2D landmarks -> projected 2D pitch -> constrained 3D search -> compatible 3D angles`
 
+The package uses fixed angle conventions for pitch, yaw, and view
+elevation. To display these conventions visually, use:
+
+``` r
+conventions()
+```
+
 First, use two landmarks — a base and a tip — to calculate the projected
 2D pitch:
 
@@ -65,11 +72,6 @@ p2d <- pitch2d.from.xy(
   plot = TRUE
 )
 ```
-
-If the object was photographed perfectly side-on and at eye level, this
-2D angle would already equal its 3D pitch. In real images, however, many
-3D orientations can produce the same 2D projection, which is why
-`araponga` exists.
 
 The output from `pitch2d.from.xy()` can then be used to ask, for
 example, which 3D pitches (up-down orientation) are compatible with the
@@ -115,6 +117,7 @@ returned.
   - `find.yaw()`
 - visualizing angles:
   - `plot.angles()`
+  - `conventions()`
 - working with yaw sets:
   - `trim.yaws()`
   - `summarize.yaws()`

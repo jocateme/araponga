@@ -69,6 +69,8 @@ Finally, **view elevation** is the vertical angle of the camera relative to the 
 plot.angles(-15, type = "view_elevation")
 ```
 
+You can remind yourself of the package conventions at any time with `conventions()`.
+
 With that clarified, let's move on to the case study, and the reason why the package was originally developed.
 
 ## Case study: estimating beak gape angle in bellbirds
