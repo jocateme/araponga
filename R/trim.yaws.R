@@ -1,12 +1,17 @@
-#' Trim candidate yaw sets known or expected to differ in yaw
+#' Trim candidate yaw sets by directional separation
 #'
 #' @description
+#' Trim two candidate yaw sets to angles that have at least one compatible
+#' partner in the other set, given minimum and maximum directional separation
+#' constraints.
+#'
+#' @details
 #' Given two sets of candidate yaw angles, `trim.yaws()` removes elements from each set that
 #' do not have at least one partner in the other set that is at least `min_sep` and up to
 #' `max_sep` clockwise (for `ccw_yaws` set) or counterclockwise (for `cw_yaws`) from it. In
-#' other words, each retained `ccw_yaws` angle will be ≥ `min_sep` and ≤ `max_sep`
+#' other words, each retained `ccw_yaws` angle will be `>= min_sep` and `<= max_sep`
 #' counterclockwise of at least one `cw_yaws` angle. Analogously, each retained `cw_yaws` angle
-#' will be ≥ `min_sep` and ≤ `max_sep` clockwise of at least one `ccw_yaws` angle.
+#' will be `>= min_sep` and `<= max_sep` clockwise of at least one `ccw_yaws` angle.
 #'
 #' @param ccw_yaws Numeric vector: candidate yaw angles known/expected to be
 #'  **counterclockwise** of `cw_yaws` (degrees, in the interval (-180, 180]).

@@ -2,7 +2,7 @@
 % Please edit documentation in R/trim.yaws.R
 \name{trim.yaws}
 \alias{trim.yaws}
-\title{Trim candidate yaw sets known or expected to differ in yaw}
+\title{Trim candidate yaw sets by directional separation}
 \usage{
 trim.yaws(ccw_yaws, cw_yaws, min_sep, max_sep, plot = FALSE)
 }
@@ -30,12 +30,17 @@ A \code{list} with elements:
 }
 }
 \description{
+Trim two candidate yaw sets to angles that have at least one compatible
+partner in the other set, given minimum and maximum directional separation
+constraints.
+}
+\details{
 Given two sets of candidate yaw angles, \code{trim.yaws()} removes elements from each set that
 do not have at least one partner in the other set that is at least \code{min_sep} and up to
 \code{max_sep} clockwise (for \code{ccw_yaws} set) or counterclockwise (for \code{cw_yaws}) from it. In
-other words, each retained \code{ccw_yaws} angle will be ≥ \code{min_sep} and ≤ \code{max_sep}
+other words, each retained \code{ccw_yaws} angle will be \verb{>= min_sep} and \verb{<= max_sep}
 counterclockwise of at least one \code{cw_yaws} angle. Analogously, each retained \code{cw_yaws} angle
-will be ≥ \code{min_sep} and ≤ \code{max_sep} clockwise of at least one \code{ccw_yaws} angle.
+will be \verb{>= min_sep} and \verb{<= max_sep} clockwise of at least one \code{ccw_yaws} angle.
 }
 \examples{
 # hypothetical candidate yaw sets:
