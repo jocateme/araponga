@@ -3,6 +3,7 @@
 export(Rx)
 export(Ry)
 export(Rz)
+export(conventions)
 export(deg2rad)
 export(download.simdata)
 export(find.3d)
