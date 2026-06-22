@@ -12,7 +12,7 @@ output:
     # toc_float: TRUE
     # toc_collapsed: TRUE
 vignette: >
-  %\VignetteIndexEntry{beak-gape}
+  %\VignetteIndexEntry{araponga}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -437,7 +437,7 @@ They can represent approximate field observations:
 candidate_view_elevations = -20:20
 
 # object approximately side-on facing left
-candidate_yaws = c(-160:-179, 160:180) # left facing
+candidate_yaws = c(-160:-179, 160:180)
 
 # object generally facing the camera
 candidate_yaws = -120:-60

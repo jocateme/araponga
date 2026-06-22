@@ -37,8 +37,6 @@ Then load the package:
 library(araponga)
 ```
 
-## Simulation data
-
 The main angle-recovery functions use a precomputed simulation dataset.
 Download it once before using `find.3d()`, `find.pitch()`, or
 `find.yaw()`:
