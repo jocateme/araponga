@@ -1,6 +1,6 @@
 Package: araponga
 Title: Estimate 3D Orientations from 2D Landmarks
-Version: 0.1-0
+Version: 1.0.0
 Authors@R: 
     person("João C T", "Menezes", "", "jocateme@gmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-4156-2934"))
