@@ -21,7 +21,7 @@
 #'  between a value in one set and a partner in the other set.
 #' @param max_sep Non-negative numeric scalar: the maximum angular separation (degrees) allowed
 #'  between a value in one set and a partner in the other set.
-#' @param plot Logical scalar. `TRUE` draws diagnostic plots with retained (green) and excluded
+#' @param plot Logical scalar. `TRUE` draws diagnostic plots with retained (blue) and excluded
 #'  (red) angles for each set. 
 #'
 #' @returns A \code{list} with elements:
@@ -149,30 +149,68 @@ trim.yaws <- function(ccw_yaws,
     
     old_par <- graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(old_par), add = TRUE)
-    graphics::par(mfrow = c(1,2))
+    graphics::par(
+      mfrow = c(1, 2),
+      oma = c(1.2, 0, 0, 0)
+    )
     
-    plot.angles(ccw_yaws,
+    plot.angles(0,
                 type = "yaw",
-                col = "green",
-                main = "CCW yaws",
+                col = "transparent",
+                main = "Counterclockwise\nyaw set",
                 labels = FALSE)
-    plot.angles(ccw_excl,
-                type = "yaw",
-                col = "red",
-                labels = FALSE,
-                add = TRUE)
+    if(length(ccw_yaws) > 0){
+      plot.angles(ccw_yaws,
+                  type = "yaw",
+                  col = "#0072B2",
+                  labels = FALSE,
+                  add = TRUE)
+    }
+    if(length(ccw_excl) > 0){
+      plot.angles(ccw_excl,
+                  type = "yaw",
+                  col = "#D55E00",
+                  labels = FALSE,
+                  add = TRUE)
+    }
     
-    plot.angles(cw_yaws,
+    plot.angles(0,
                 type = "yaw",
-                col = "green",
-                main = "CW yaws",
+                col = "transparent",
+                main = "Clockwise\nyaw set",
                 labels = FALSE)
-    plot.angles(cw_excl,
-                type = "yaw",
-                col = "red",
-                main = "CW yaws",
-                labels = FALSE,
-                add = TRUE)
+    if(length(cw_yaws) > 0){
+      plot.angles(cw_yaws,
+                  type = "yaw",
+                  col = "#0072B2",
+                  labels = FALSE,
+                  add = TRUE)
+    }
+    if(length(cw_excl) > 0){
+      plot.angles(cw_excl,
+                  type = "yaw",
+                  col = "#D55E00",
+                  labels = FALSE,
+                  add = TRUE)
+    }
+    
+    graphics::par(
+      fig = c(0, 1, 0, 1),
+      mar = c(0, 0, 0, 0),
+      new = TRUE
+    )
+    graphics::plot.new()
+    graphics::legend(
+      "bottom",
+      legend = c("Retained", "Excluded"),
+      col = c("#0072B2", "#D55E00"),
+      lwd = 2,
+      horiz = TRUE,
+      bty = "n",
+      x.intersp = 0.8,
+      y.intersp = 0.8,
+      cex = 0.8
+    )
     
   }
   

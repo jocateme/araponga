@@ -19,7 +19,7 @@ between a value in one set and a partner in the other set.}
 \item{max_sep}{Non-negative numeric scalar: the maximum angular separation (degrees) allowed
 between a value in one set and a partner in the other set.}
 
-\item{plot}{Logical scalar. \code{TRUE} draws diagnostic plots with retained (green) and excluded
+\item{plot}{Logical scalar. \code{TRUE} draws diagnostic plots with retained (blue) and excluded
 (red) angles for each set.}
 }
 \value{

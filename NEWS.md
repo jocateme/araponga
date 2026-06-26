@@ -1,5 +1,8 @@
-# araponga 1.0.0
+# araponga 1.0.1
 
-# araponga 0.1-0
+* Fixed plotting in `trim.yaws()` when retained or excluded yaw sets are empty (#2).
+* CRAN resubmission.
+
+# araponga 1.0.0
 
 * Initial CRAN submission.

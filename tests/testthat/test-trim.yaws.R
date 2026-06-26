@@ -82,3 +82,33 @@ test_that("trim.yaws handles empty input vectors", {
   expect_equal(res2$trimmed_ccw_yaws, numeric(0))
   expect_equal(res2$trimmed_cw_yaws, numeric(0))
 })
+
+test_that("trim.yaws plots when no yaws are excluded", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  expect_no_error(
+    trim.yaws(
+      ccw_yaws = 30:60,
+      cw_yaws = 0:30,
+      min_sep = 0,
+      max_sep = 90,
+      plot = TRUE
+    )
+  )
+})
+
+test_that("trim.yaws plots when all yaws are excluded", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  expect_no_error(
+    trim.yaws(
+      ccw_yaws = -10,
+      cw_yaws = 130,
+      min_sep = 0,
+      max_sep = 180,
+      plot = TRUE
+    )
+  )
+})
