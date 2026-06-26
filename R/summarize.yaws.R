@@ -28,17 +28,35 @@
 #' # a wrapping interval (points around ±180)
 #' summarize.yaws(c(-175:-170, 171:179), plot = TRUE)
 #' 
-#' #' # output from find.yaw()
-#' \donttest{
-#' yaws <- find.yaw(pitch2d = 14:16, candidate_view_elevations = -45, candidate_pitches = 10:20)
-#' summarize.yaws(yaws, plot = TRUE)
-#' }
 #'
 #' # singleton (no plotting)
 #' summarize.yaws(30)
 #' 
 #' # more than one interval possible (returns warning)
 #' summarize.yaws(c(-90, 90))
+#' 
+#' # output from find.yaw()
+#' \donttest{
+#' # test that dataset is downloaded before running example
+#' sim_path <- file.path(
+#'   tools::R_user_dir("araponga", "cache"),
+#'   "sim_data_parquet"
+#' )
+#' 
+#' if(dir.exists(sim_path)){
+#' yaws <- find.yaw(
+#'   pitch2d = 14:16,
+#'   candidate_view_elevations = -45,
+#'   candidate_pitches = 10:20,
+#'   sim_download = FALSE
+#'   )
+#' summarize.yaws(yaws, plot = TRUE)
+#' } else {
+#' message(
+#'   "Run download.simdata() first to enable this example."
+#'   )
+#' }
+#' }
 #' 
 #' @export
 summarize.yaws <- function(yaws,

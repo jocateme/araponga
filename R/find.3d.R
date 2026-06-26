@@ -54,21 +54,55 @@
 #'
 #' @examples
 #' \donttest{
+#' # test that dataset is downloaded before running examples
+#' sim_path <- file.path(
+#'   tools::R_user_dir("araponga", "cache"),
+#'   "sim_data_parquet"
+#' )
+#' 
+#' if(dir.exists(sim_path)){
 #' 
 #' # hypothetical pitch2d from coordinates
 #' p2d <- pitch2d.from.xy(10, 1, -12, 20)
 #' 
 #' # pitches that project to `p2d` (± 2 pixel error) if seen from 30° (± 1° error) below
-#' find.pitch(p2d, candidate_view_elevations = -29:-31, label_error = 2)
+#' find.pitch(
+#'   p2d,
+#'   candidate_view_elevations = -29:-31,
+#'   label_error = 2,
+#'   sim_download = FALSE
+#'   )
+#'
 #' # same returned values as from:
-#' find.3d(p2d, find = "pitch", candidate_view_elevations = -29:-31, label_error = 2)
+#' find.3d(
+#'   p2d,
+#'   find = "pitch",
+#'   candidate_view_elevations = -29:-31,
+#'   label_error = 2,
+#'   sim_download = FALSE
+#'   )
+#'
 #' # similar to above, now given yaw between 5° and 15°
-#' find.pitch(pitch2d = p2d, candidate_view_elevations = -29:-31, candidate_yaws = 5:15,
-#' label_error = 2)
+#' find.pitch(
+#'   pitch2d = p2d,
+#'   candidate_view_elevations = -29:-31,
+#'   candidate_yaws = 5:15,
+#'   label_error = 2,
+#'   sim_download = FALSE
+#'   )
 #'
 #' # yaws that project to `p2d` (± 2 pixel error) if seen from 10° (± 2° error) below
-#' find.yaw(p2d, candidate_view_elevations = -8:-12, label_error = 2)
+#' find.yaw(
+#'   p2d,
+#'   candidate_view_elevations = -8:-12,
+#'   label_error = 2
+#'   )
 #' 
+#' } else {
+#' message(
+#'   "Run download.simdata() first to enable this example."
+#'   )
+#' }
 #' }
 #'
 #' @importFrom rlang .data

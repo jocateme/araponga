@@ -30,16 +30,33 @@
 #' ## view_elevation between -30 and -40
 #' plot.angles(-30:-40, "view_elevation")
 #' 
-#' # call with output from find.3d
-#' \donttest{
-#' ## pitches and yaws that project to 10° (± 1° error) if seen from 15° below
-#' df <- find.3d(9:11, find = c("pitch", "yaw"), candidate_view_elevations = -15)
-#' plot.angles(df)
-#' }
-#' 
 #' # call with named list
 #' list <- list(pitch = 10:30, yaw = -100:-45, view_elevation = -10:-15)
 #' plot.angles(list)
+#' 
+#' # call with output from find.3d
+#' \donttest{
+#' # test that dataset is downloaded before running example
+#' sim_path <- file.path(
+#'   tools::R_user_dir("araponga", "cache"),
+#'   "sim_data_parquet"
+#' )
+#' 
+#' if(dir.exists(sim_path)){
+#' ## pitches and yaws that project to 10° (± 1° error) if seen from 15° below
+#' df <- find.3d(
+#'   9:11,
+#'   find = c("pitch", "yaw"),
+#'   candidate_view_elevations = -15,
+#'   sim_download = FALSE
+#'   )
+#' plot.angles(df)
+#' } else {
+#' message(
+#'   "Run download.simdata() first to enable this example."
+#'   )
+#' }
+#' }
 #' 
 #' @seealso [find.3d()]
 #' @export plot.angles
