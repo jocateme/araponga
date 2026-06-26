@@ -29,7 +29,7 @@
 #' summarize.yaws(c(-175:-170, 171:179), plot = TRUE)
 #' 
 #' #' # output from find.yaw()
-#' if(interactive()){
+#' \donttest{
 #' yaws <- find.yaw(pitch2d = 14:16, candidate_view_elevations = -45, candidate_pitches = 10:20)
 #' summarize.yaws(yaws, plot = TRUE)
 #' }

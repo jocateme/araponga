@@ -53,7 +53,7 @@
 #' pitch and any optional candidate constraints.
 #'
 #' @examples
-#' if(interactive()){
+#' \donttest{
 #' 
 #' # hypothetical pitch2d from coordinates
 #' p2d <- pitch2d.from.xy(10, 1, -12, 20)
