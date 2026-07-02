@@ -1,3 +1,5 @@
+# araponga (development version)
+
 # araponga 1.0.1
 
 * Fixed plotting in `trim.yaws()` when retained or excluded yaw sets are empty (#2).
