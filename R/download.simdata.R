@@ -30,8 +30,8 @@ download.simdata <- function(overwrite = FALSE,
   
   dest_dir <- tools::R_user_dir("araponga", "cache")
   dataset_dir <- file.path(dest_dir, "sim_data_parquet")
-  remote_url <- "https://zenodo.org/records/18982472/files/sim_data_parquet.zip?download=1"
-  expected_md5 <- "7b3a60ffdadbf60f93b33a30c8088475"
+  remote_url <- "https://zenodo.org/records/21169900/files/sim_data_parquet.zip?download=1"
+  expected_md5 <- "8bc7f8256e60e76612e871104e2f2756"
   
   has_parquet_files <- function(path) {
     length(list.files(path, pattern = "\\.parquet$", recursive = TRUE, full.names = TRUE)) > 0

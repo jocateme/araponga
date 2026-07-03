@@ -59,7 +59,13 @@ pitch2d.from.3d <- function(pitch,
                       yaw,
                       view_elevation)
   
-  pitch2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
+  projected_length <- sqrt(R_total[2,1]^2 + R_total[1,1]^2)
+  
+  if(projected_length <= sqrt(.Machine$double.eps)){
+    pitch2d <- atan2(0, 0)
+  } else {
+    pitch2d <- rad2deg(atan2(R_total[2,1], R_total[1,1]))
+  }
   
   if(plot){
     old_par <- graphics::par(no.readonly = TRUE)

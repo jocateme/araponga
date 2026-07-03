@@ -58,7 +58,7 @@
 #' }
 #' }
 #' 
-#' @export
+#' @export summarize.yaws
 summarize.yaws <- function(yaws,
                            plot = FALSE,
                            tie_action = c("all",

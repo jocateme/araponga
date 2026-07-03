@@ -14,8 +14,8 @@ pitch2d.w.error(
 \arguments{
 \item{pitch2d}{Numeric scalar returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.}
 
-\item{label_error}{Positive numeric scalar specifying the error (± pixels) used to perturb each
-landmark coordinate.}
+\item{label_error}{Positive numeric scalar specifying the error used to perturb each landmark
+coordinate, in the same units as the coordinates supplied to \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} (e.g., pixels).}
 
 \item{label_nsamp}{Positive integer scalar specifying the approximate number of grid combinations to
 evaluate. Default 625 uses a 5-point grid for each of the four coordinates, for 5^4 = 625 total

@@ -62,8 +62,9 @@ interval (-180, 180]. Convention: \code{0} = pointed right, \code{90} = pointed 
 straight toward, \code{180} = pointed left. Default is \code{NULL} (all yaws considered). Provided values are
 rounded to the nearest integer.}
 
-\item{label_error}{Positive numeric scalar specifying the error (± pixels) used to perturb landmark
-coordinates. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Required if \code{length(pitch2d)} = 1.}
+\item{label_error}{Positive numeric scalar specifying the error used to perturb each landmark
+coordinate, in the same units as the coordinates supplied to \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} (e.g., pixels).
+Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Required if \code{length(pitch2d)} = 1.}
 
 \item{label_nsamp}{Positive integer scalar specifying the approximate number of grid combinations to
 evaluate. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Required if \code{length(pitch2d)} = 1.}
@@ -100,7 +101,8 @@ integer combinations of pitch (\code{-90:90}), yaw (\code{-179:180}), and roll (
 the base midpoint and tip were projected to 2D pixel coordinates with an orthographic camera.
 The cached simulation table stores the resulting projected geometry and derived 2D pitch values;
 \code{find.3d()} (and wrappers) then filter that table for combinations compatible with the requested 2D
-pitch and any optional candidate constraints.
+pitch and any optional candidate constraints. The code used to generate the dataset is maintained at
+https://github.com/jocateme/araponga/tree/main/data-raw/simdata.
 }
 \examples{
 \donttest{
