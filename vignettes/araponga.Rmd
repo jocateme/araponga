@@ -3,14 +3,11 @@ title: "From 2D landmarks to 3D orientantions: the `araponga` workflow"
 author: "João C. T. Menezes"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
-  # html_document:
   rmarkdown::html_vignette:
     fig_height: 5
     fig_width: 5
     toc: TRUE
     toc_depth: 2
-    # toc_float: TRUE
-    # toc_collapsed: TRUE
 vignette: >
   %\VignetteIndexEntry{araponga}
   %\VignetteEngine{knitr::rmarkdown}
@@ -406,7 +403,7 @@ next_frame_yaw <- -50:90
 We can use `trim.yaws()` to keep only yaw values consistent with this movement:
 
 ```{r}
-# red = excluded; green = retained
+# orange = excluded; blue = retained
 trimmed <- trim.yaws(ccw_yaws = yaw,
                      cw_yaws = next_frame_yaw,
                      min_sep = 0,
