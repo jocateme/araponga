@@ -194,17 +194,15 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
                        labels,
                        add){
   
+  fullcircle <- any(abs(pitches) > 90) & any(abs(pitches) < 90)
+  
   pitches <- deg2rad(unique(pitches))
   
   if(is.null(main)) main <- "pitch\n(side view)"
   if(is.null(col)) col <- "cadetblue"
   
-  if(facing == "left"){
-    pitches <- pi - pitches
-  }
-  
   if(!add){
-    if(any(abs(pitches) > pi/2)){
+    if(fullcircle){
       theta <- seq(0, 2*pi, length.out = 400)
     } else {
       if(facing == "right"){
@@ -212,6 +210,10 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
       } else {
         theta <- seq(90, 270, length.out = 200) * pi/180
       }
+    }
+    
+    if(facing == "left"){
+      pitches <- pi - pitches
     }
     
     graphics::plot(x = cos(theta),
@@ -243,7 +245,7 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
                        lty = 2,
                        col = "#BEBEBE80")
     
-    if(any(abs(pitches) > pi/2)){
+    if(fullcircle){
       graphics::segments(0, 0,
                          -1+2*(facing == "left"), 0,
                          lty = 2,

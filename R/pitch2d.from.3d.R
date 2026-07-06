@@ -125,7 +125,7 @@ pitch2d.from.3d <- function(pitch,
                     y = c(0,
                           r*sin(angles),
                           0),
-                    col = "darkblue")
+                    col = grDevices::adjustcolor("darkblue", alpha.f = 0.8))
     if(pitch2d < 0){
       ytxt <- min(0.1*diff(ylim) * sin(angles))
     } else {
@@ -134,7 +134,7 @@ pitch2d.from.3d <- function(pitch,
     graphics::text(x = max(0.1*diff(xlim) * cos(angles)),
                    y =  ytxt,
                    labels = paste0(round(pitch2d, 2), "\u00B0"),
-                   col = "darkblue")
+                   col = grDevices::adjustcolor("darkblue", alpha.f = 0.8))
   }
   
   return(pitch2d)

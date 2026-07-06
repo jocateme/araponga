@@ -6,6 +6,7 @@
 * Added codes for generating dataset to `data-raw/simdata`
 * Fixed bug that dropped column name in the output of `find.3d()`.
 * Minor clarification to `label_error` argument.
+* Fixed bug that plotted full circle when `facing = "left"` in `plot.angles()`.
 
 # araponga 1.0.1
 
