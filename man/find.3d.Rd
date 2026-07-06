@@ -101,7 +101,7 @@ integer combinations of pitch (\code{-90:90}), yaw (\code{-179:180}), and roll (
 the base midpoint and tip were projected to 2D pixel coordinates with an orthographic camera.
 The cached simulation table stores the resulting projected geometry and derived 2D pitch values;
 \code{find.3d()} (and wrappers) then filter that table for combinations compatible with the requested 2D
-pitch and any optional candidate constraints. The code used to generate the dataset is maintained at
+pitch and any optional candidate constraints. The codes used to generate the dataset are maintained at
 https://github.com/jocateme/araponga/tree/main/data-raw/simdata.
 }
 \examples{

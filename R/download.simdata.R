@@ -31,7 +31,74 @@ download.simdata <- function(overwrite = FALSE,
   dest_dir <- tools::R_user_dir("araponga", "cache")
   dataset_dir <- file.path(dest_dir, "sim_data_parquet")
   remote_url <- "https://zenodo.org/records/21169900/files/sim_data_parquet.zip?download=1"
+  simdata_version <- "1.1.0"
   expected_md5 <- "8bc7f8256e60e76612e871104e2f2756"
+  meta_file <- file.path(dest_dir, "ARAPONGA_SIMDATA_VERSION")
+  
+  cache_is_current <- function(dataset_dir, simdata_version, expected_md5, meta_file) {
+    if (!dir.exists(dataset_dir)) {
+      return(FALSE)
+    }
+    
+    parquet_files <- list.files(
+      dataset_dir,
+      pattern = "\\.parquet$",
+      recursive = TRUE,
+      full.names = TRUE
+    )
+    
+    if (length(parquet_files) == 0) {
+      return(FALSE)
+    }
+    
+    if (!file.exists(meta_file)) {
+      return(FALSE)
+    }
+    
+    meta <- readLines(meta_file, warn = FALSE)
+    
+    any(meta == paste0("simdata_version: ", simdata_version)) &&
+      any(meta == paste0("zip_md5: ", expected_md5))
+  }
+  
+  if (dir.exists(dataset_dir) && !overwrite) {
+    if (cache_is_current(dataset_dir, simdata_version, expected_md5, meta_file)) {
+      if (!quiet) {
+        message("Simulation dataset version ", simdata_version,
+                " is already installed.")
+      }
+      return(normalizePath(dataset_dir, winslash = "/"))
+    }
+    
+    msg <- paste0(
+      "An older or unversioned araponga simulation dataset was found at:\n",
+      dataset_dir,
+      "\n\n",
+      "The current required version is ", simdata_version, "."
+    )
+    
+    if (interactive()) {
+      update <- utils::askYesNo(
+        paste0(msg, "\n\nDownload the updated version now, overwriting the old cache?")
+      )
+      
+      if (isTRUE(update)) {
+        overwrite <- TRUE
+      } else {
+        stop(
+          "The installed simulation dataset is outdated. ",
+          "Run `download.simdata(overwrite = TRUE)` to update it.",
+          call. = FALSE
+        )
+      }
+    } else {
+      stop(
+        msg,
+        "\n\nRun `download.simdata(overwrite = TRUE)` to update it.",
+        call. = FALSE
+      )
+    }
+  }
   
   has_parquet_files <- function(path) {
     length(list.files(path, pattern = "\\.parquet$", recursive = TRUE, full.names = TRUE)) > 0
@@ -47,6 +114,10 @@ download.simdata <- function(overwrite = FALSE,
   # Remove incomplete or stale cache before rebuilding
   if (dir.exists(dataset_dir)) {
     unlink(dataset_dir, recursive = TRUE, force = TRUE)
+  }
+  
+  if (file.exists(meta_file)) {
+    unlink(meta_file)
   }
   
   zip_path <- file.path(dest_dir, "sim_data_parquet.zip")
@@ -157,6 +228,15 @@ download.simdata <- function(overwrite = FALSE,
   if (file.exists(zip_path)) {
     unlink(zip_path)
   }
+  
+  writeLines(
+    c(
+      paste0("simdata_version: ", simdata_version),
+      paste0("zip_md5: ", expected_md5),
+      paste0("downloaded_at: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"))
+    ),
+    meta_file
+  )
   
   out_dir <- normalizePath(dataset_dir, winslash = "/")
   if (!quiet) {
