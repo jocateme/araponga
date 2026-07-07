@@ -59,7 +59,7 @@
 #' # test that dataset is downloaded before running examples
 #' sim_path <- file.path(
 #'   tools::R_user_dir("araponga", "cache"),
-#'   "sim_data_parquet"
+#'   .simdata_dirname
 #' )
 #' 
 #' if(dir.exists(sim_path)){
@@ -205,16 +205,22 @@ find.3d <- function(pitch2d,
   }
   
   dest_dir <- tools::R_user_dir("araponga", "cache")
-  if(!dir.exists(file.path(dest_dir, "sim_data_parquet"))){
-    if(!sim_download){
-      stop("Simulation dataset not found locally. Either set `sim_download = TRUE` or run",
-      " `download.simdata()` to download the dataset (207MB, one-time).")
+  dataset_dir <- file.path(dest_dir, .simdata_dirname)
+  
+  if (!.simdata_is_current()) {
+    if (!sim_download) {
+      stop(
+        "The current simulation dataset was not found locally. ",
+        "Run `download.simdata(overwrite = TRUE)` or set `sim_download = TRUE` ",
+        "to download the current dataset.",
+        call. = FALSE
+      )
     }
     
-    download.simdata()
+    download.simdata(overwrite = TRUE)
   }
   
-  sim_data <- arrow::open_dataset(file.path(dest_dir, "sim_data_parquet"))
+  sim_data <- arrow::open_dataset(dataset_dir)
   
   if(length(pitch2d) > 1){
     pitch2d_w_error <- pitch2d

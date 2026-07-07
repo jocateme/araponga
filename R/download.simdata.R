@@ -12,9 +12,9 @@
 #' dataset directory.
 #'
 #' @details
-#' The dataset is stored under `tools::R_user_dir("araponga", "cache")`. If the archive is already
-#' available locally and `overwrite = FALSE`, the cached dataset is reused. See [find.3d()] for how
-#' the dataset was constructed.
+#' The dataset is stored under `tools::R_user_dir("araponga", "cache")`. If the current dataset version
+#' is already available locally and `overwrite = FALSE`, the cached dataset is reused. See [find.3d()]
+#' for how the dataset was constructed.
 #'
 #' @export
 download.simdata <- function(overwrite = FALSE,
@@ -29,13 +29,10 @@ download.simdata <- function(overwrite = FALSE,
   }
   
   dest_dir <- tools::R_user_dir("araponga", "cache")
-  dataset_dir <- file.path(dest_dir, "sim_data_parquet")
-  remote_url <- "https://zenodo.org/records/21169900/files/sim_data_parquet.zip?download=1"
-  simdata_version <- "1.1.0"
-  expected_md5 <- "8bc7f8256e60e76612e871104e2f2756"
-  meta_file <- file.path(dest_dir, "ARAPONGA_SIMDATA_VERSION")
+  dataset_dir <- file.path(dest_dir, .simdata_dirname)
+  meta_file <- file.path(dest_dir, .simdata_meta_file)
   
-  cache_is_current <- function(dataset_dir, simdata_version, expected_md5, meta_file) {
+  cache_is_current <- function(dataset_dir, .simdata_version, .simdata_md5, meta_file) {
     if (!dir.exists(dataset_dir)) {
       return(FALSE)
     }
@@ -57,24 +54,22 @@ download.simdata <- function(overwrite = FALSE,
     
     meta <- readLines(meta_file, warn = FALSE)
     
-    any(meta == paste0("simdata_version: ", simdata_version)) &&
-      any(meta == paste0("zip_md5: ", expected_md5))
+    any(meta == paste0("simdata_version: ", .simdata_version)) &&
+      any(meta == paste0("zip_md5: ", .simdata_md5))
   }
   
-  if (dir.exists(dataset_dir) && !overwrite) {
-    if (cache_is_current(dataset_dir, simdata_version, expected_md5, meta_file)) {
-      if (!quiet) {
-        message("Simulation dataset version ", simdata_version,
-                " is already installed.")
-      }
-      return(normalizePath(dataset_dir, winslash = "/"))
+  if (.simdata_is_current() && !overwrite){
+    if (!quiet) {
+      message("Simulation dataset version ", .simdata_version, " is already installed.")
     }
+    return(normalizePath(dataset_dir, winslash = "/"))
+  }
     
     msg <- paste0(
       "An older or unversioned araponga simulation dataset was found at:\n",
       dataset_dir,
       "\n\n",
-      "The current required version is ", simdata_version, "."
+      "The current required version is ", .simdata_version, "."
     )
     
     if (interactive()) {
@@ -120,7 +115,7 @@ download.simdata <- function(overwrite = FALSE,
     unlink(meta_file)
   }
   
-  zip_path <- file.path(dest_dir, "sim_data_parquet.zip")
+  zip_path <- file.path(dest_dir, .simdata_file)
   tmp_zip <- paste0(zip_path, ".partial")
   tmp_extract <- tempfile("sim_data_extract_", tmpdir = dest_dir)
   dir.create(tmp_extract, showWarnings = FALSE)
@@ -146,7 +141,7 @@ download.simdata <- function(overwrite = FALSE,
     h <- curl::new_handle()
     curl::handle_setheaders(h, "User-Agent" = ua)
     downloaded <- tryCatch({
-      curl::curl_download(remote_url, tmp_zip, quiet = quiet, handle = h)
+      curl::curl_download(.simdata_url(), tmp_zip, quiet = quiet, handle = h)
       TRUE
     }, error = function(e) FALSE)
   }
@@ -154,7 +149,7 @@ download.simdata <- function(overwrite = FALSE,
   if (!downloaded && requireNamespace("httr", quietly = TRUE)) {
     downloaded <- tryCatch({
       resp <- httr::GET(
-        remote_url,
+        .simdata_url(),
         httr::write_disk(tmp_zip, overwrite = TRUE),
         httr::user_agent(ua),
         if (!quiet) httr::progress()
@@ -166,7 +161,7 @@ download.simdata <- function(overwrite = FALSE,
   
   if (!downloaded) {
     downloaded <- tryCatch({
-      utils::download.file(remote_url, tmp_zip, mode = "wb", quiet = quiet)
+      utils::download.file(.simdata_url(), tmp_zip, mode = "wb", quiet = quiet)
       TRUE
     }, error = function(e) FALSE)
   }
@@ -184,12 +179,12 @@ download.simdata <- function(overwrite = FALSE,
   }
   
   actual_md5 <- unname(tools::md5sum(zip_path))
-  if (!identical(tolower(actual_md5), tolower(expected_md5))) {
+  if (!identical(tolower(actual_md5), tolower(.simdata_md5))) {
     unlink(zip_path)
     stop(
       paste0(
         "Checksum mismatch: downloaded file may be corrupted.\n",
-        "Expected: ", expected_md5, "\n",
+        "Expected: ", .simdata_md5, "\n",
         "Got:      ", actual_md5
       ),
       call. = FALSE
@@ -231,8 +226,8 @@ download.simdata <- function(overwrite = FALSE,
   
   writeLines(
     c(
-      paste0("simdata_version: ", simdata_version),
-      paste0("zip_md5: ", expected_md5),
+      paste0("simdata_version: ", .simdata_version),
+      paste0("zip_md5: ", .simdata_md5),
       paste0("downloaded_at: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"))
     ),
     meta_file
