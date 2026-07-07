@@ -1,4 +1,4 @@
-# araponga (development version)
+# araponga 1.1.0
 
 * `download.simdata()`: regenerated simulation dataset v1.1.0, now with fixed floating-point issue.
 * `download.simdata()`: updated to download dataset v1.1.0 and warn users that might have the older version installed.
