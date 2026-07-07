@@ -39,6 +39,15 @@ Then load the package:
 library(araponga)
 ```
 
+You can install the development version from GitHub with:
+
+```r
+install.packages("pak")
+pak::pak("jocateme/araponga")
+```
+
+The development version may include changes that have not yet been released on CRAN.
+
 The main angle-recovery functions use a precomputed simulation dataset. Download it once before using `find.3d()`, `find.pitch()`, or `find.yaw()`:
 
 ```r
@@ -53,7 +62,7 @@ The general workflow is:
 
 `2D landmarks -> projected 2D pitch -> constrained 3D search -> compatible 3D angles`
 
-The package uses fixed angle conventions for pitch, yaw, and view elevation. To display these conventions visually, use:
+The package uses fixed angle conventions for pitch, yaw, and view elevation. To display these conventions at any time, use:
 
 ```r
 conventions()
