@@ -4,7 +4,7 @@
 \alias{summarize.yaws}
 \title{Summarize yaw angles into the smallest continuous interval}
 \usage{
-\method{summarize}{yaws}(yaws, plot = FALSE, tie_action = c("all", "error"))
+summarize.yaws(yaws, plot = FALSE, tie_action = c("all", "error"))
 }
 \arguments{
 \item{yaws}{Numeric vector of yaw angles, in degrees, in the interval (-180, 180].}
