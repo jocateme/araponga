@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 # `araponga`: estimating 3D orientations from 2D landmarks in R
 
-`araponga` is for you if you need to estimate the 3D orientations (left-right, up-down) of an object from images. It is especially useful when you know - or can reasonably estimate - the view elevation from which the object was photographed.
+`araponga` is for you if you need to estimate the 3D orientations (left-right, up-down) of a directed object from single images. It is especially useful when you know - or can reasonably estimate - the view elevation from which the object was photographed.
 
 The central problem is that a 2D projection does not uniquely determine a 3D angle: the same apparent orientation in an image can be produced by many combinations of true orientation, camera position, and viewing angle. Instead of returning a single potentially misleading estimate, `araponga` returns the set of 3D angles compatible with the observed 2D projection and any user-provided constraints.
 
