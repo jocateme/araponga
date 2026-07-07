@@ -1,7 +1,5 @@
 # Internal constants for the external simulation dataset.
 
-# R/simdata-utils.R
-
 .simdata_version <- "1.1.0"
 .simdata_md5 <- "8bc7f8256e60e76612e871104e2f2756"
 .simdata_record_id <- "21169900"

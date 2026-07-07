@@ -1,10 +1,3 @@
-has_sim_data <- function() {
-  dir.exists(file.path(
-    tools::R_user_dir("araponga", "cache"),
-    "sim_data_parquet"
-  ))
-}
-
 test_that("find.3d validates pitch2d and arguments before lookup", {
   expect_error(find.3d(), "`pitch2d` must be provided.")
   expect_error(find.3d(numeric(0), label_error = 1), "`pitch2d` must be provided.")
@@ -57,25 +50,27 @@ test_that("find.yaw and find.pitch validate paired", {
   expect_error(find.pitch(0, label_error = 1, paired = 1), "`paired` must be a logical scalar.")
 })
 
-test_that("CRAN-friendly when simulation data are absent", {
-  skip_if(has_sim_data())
-
+test_that("CRAN-friendly when current simulation data are absent", {
+  skip_if(.simdata_is_current())
+  
   expect_error(
     find.3d(0, label_error = 1, sim_download = FALSE),
-    "Simulation dataset not found locally."
+    "current simulation dataset was not found locally"
   )
+  
   expect_error(
     find.yaw(0, label_error = 1, sim_download = FALSE),
-    "Simulation dataset not found locally."
+    "current simulation dataset was not found locally"
   )
+  
   expect_error(
     find.pitch(0, label_error = 1, sim_download = FALSE),
-    "Simulation dataset not found locally."
+    "current simulation dataset was not found locally"
   )
 })
 
 test_that("find wrappers return the expected structure when data are available", {
-  skip_if_not(has_sim_data())
+  skip_if_not(.simdata_is_current())
 
   p2d <- pitch2d.from.xy(100, 0, 0, 0)
 
@@ -106,7 +101,7 @@ test_that("find wrappers return the expected structure when data are available",
 })
 
 test_that("vectorized pitch2d input does not require label_error", {
-  skip_if_not(has_sim_data())
+  skip_if_not(.simdata_is_current())
   res <- find.3d(c(-10, 0, 10), sim_download = FALSE)
   expect_s3_class(res, "data.frame")
 })
