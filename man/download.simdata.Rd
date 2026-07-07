@@ -21,7 +21,7 @@ dataset directory.
 Download the precomputed simulation dataset used by \code{\link[=find.3d]{find.3d()}} and related functions.
 }
 \details{
-The dataset is stored under \code{tools::R_user_dir("araponga", "cache")}. If the archive is already
-available locally and \code{overwrite = FALSE}, the cached dataset is reused. See \code{\link[=find.3d]{find.3d()}} for how
-the dataset was constructed.
+The dataset is stored under \code{tools::R_user_dir("araponga", "cache")}. If the current dataset version
+is already available locally and \code{overwrite = FALSE}, the cached dataset is reused. See \code{\link[=find.3d]{find.3d()}}
+for how the dataset was constructed.
 }

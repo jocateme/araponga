@@ -59,7 +59,7 @@
 #' # test that dataset is downloaded before running examples
 #' sim_path <- file.path(
 #'   tools::R_user_dir("araponga", "cache"),
-#'   .simdata_dirname
+#'   "sim_data_parquet"
 #' )
 #' 
 #' if(dir.exists(sim_path)){

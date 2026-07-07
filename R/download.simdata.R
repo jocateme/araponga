@@ -17,9 +17,7 @@
 #' for how the dataset was constructed.
 #'
 #' @export
-download.simdata <- function(overwrite = FALSE,
-                             quiet = FALSE){
-  
+download.simdata <- function(overwrite = FALSE, quiet = FALSE) {
   
   if (!is.logical(overwrite) || length(overwrite) != 1 || is.na(overwrite)) {
     stop("`overwrite` must be a logical scalar.", call. = FALSE)
@@ -32,39 +30,22 @@ download.simdata <- function(overwrite = FALSE,
   dataset_dir <- file.path(dest_dir, .simdata_dirname)
   meta_file <- file.path(dest_dir, .simdata_meta_file)
   
-  cache_is_current <- function(dataset_dir, .simdata_version, .simdata_md5, meta_file) {
-    if (!dir.exists(dataset_dir)) {
-      return(FALSE)
-    }
-    
-    parquet_files <- list.files(
-      dataset_dir,
-      pattern = "\\.parquet$",
-      recursive = TRUE,
-      full.names = TRUE
-    )
-    
-    if (length(parquet_files) == 0) {
-      return(FALSE)
-    }
-    
-    if (!file.exists(meta_file)) {
-      return(FALSE)
-    }
-    
-    meta <- readLines(meta_file, warn = FALSE)
-    
-    any(meta == paste0("simdata_version: ", .simdata_version)) &&
-      any(meta == paste0("zip_md5: ", .simdata_md5))
+  has_parquet_files <- function(path) {
+    length(list.files(path, pattern = "\\.parquet$", recursive = TRUE, full.names = TRUE)) > 0
   }
   
-  if (.simdata_is_current() && !overwrite){
+  dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  
+  # Reuse current cache
+  if (.simdata_is_current() && !overwrite) {
     if (!quiet) {
       message("Simulation dataset version ", .simdata_version, " is already installed.")
     }
     return(normalizePath(dataset_dir, winslash = "/"))
   }
-    
+  
+  # Existing cache is present, but not current
+  if (dir.exists(dataset_dir) && !overwrite) {
     msg <- paste0(
       "An older or unversioned araponga simulation dataset was found at:\n",
       dataset_dir,
@@ -95,22 +76,10 @@ download.simdata <- function(overwrite = FALSE,
     }
   }
   
-  has_parquet_files <- function(path) {
-    length(list.files(path, pattern = "\\.parquet$", recursive = TRUE, full.names = TRUE)) > 0
-  }
-  
-  dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
-  
-  # Reuse a complete existing cache
-  if (dir.exists(dataset_dir) && has_parquet_files(dataset_dir) && !overwrite) {
-    return(normalizePath(dataset_dir, winslash = "/"))
-  }
-  
-  # Remove incomplete or stale cache before rebuilding
+  # Remove incomplete, stale, or explicitly overwritten cache before rebuilding
   if (dir.exists(dataset_dir)) {
     unlink(dataset_dir, recursive = TRUE, force = TRUE)
   }
-  
   if (file.exists(meta_file)) {
     unlink(meta_file)
   }
@@ -173,6 +142,7 @@ download.simdata <- function(overwrite = FALSE,
   if (file.exists(zip_path)) {
     unlink(zip_path)
   }
+  
   ok <- file.rename(tmp_zip, zip_path)
   if (!ok || !file.exists(zip_path)) {
     stop("Could not move the downloaded archive into the cache directory.", call. = FALSE)
@@ -193,7 +163,6 @@ download.simdata <- function(overwrite = FALSE,
   
   utils::unzip(zip_path, exdir = tmp_extract)
   
-  # Identify the extracted dataset location.
   if (has_parquet_files(tmp_extract)) {
     source_dir <- tmp_extract
   } else {
@@ -215,6 +184,7 @@ download.simdata <- function(overwrite = FALSE,
   if (dir.exists(dataset_dir)) {
     unlink(dataset_dir, recursive = TRUE, force = TRUE)
   }
+  
   ok <- file.rename(source_dir, dataset_dir)
   if (!ok || !dir.exists(dataset_dir)) {
     stop("Could not move extracted dataset into the cache directory.", call. = FALSE)
@@ -237,5 +207,6 @@ download.simdata <- function(overwrite = FALSE,
   if (!quiet) {
     message("Simulation dataset available at: ", out_dir)
   }
+  
   invisible(out_dir)
 }
