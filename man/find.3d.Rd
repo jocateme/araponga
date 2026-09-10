@@ -4,125 +4,134 @@
 \alias{find.3d}
 \alias{find.yaw}
 \alias{find.pitch}
-\title{Find combinations of 3D orientations that project to an observed 2D pitch}
+\title{Find 3D orientations compatible with an observed 2D pitch}
 \usage{
 find.3d(
   pitch2d,
-  find = NULL,
-  candidate_view_elevations = NULL,
-  candidate_pitches = NULL,
-  candidate_yaws = NULL,
+  find = "all",
+  candidate_view_elevations = seq(-90, 90, default_step),
+  candidate_pitches = seq(-90, 90, default_step),
+  candidate_yaws = seq(-180 + default_step, 180, default_step),
   label_error,
   label_nsamp = 625,
-  sim_download = FALSE
+  default_step = 1,
+  max_combinations = 1e+08
 )
 
 find.yaw(
   pitch2d,
-  candidate_view_elevations = NULL,
-  candidate_pitches = NULL,
-  candidate_yaws = NULL,
+  candidate_view_elevations = seq(-90, 90, default_step),
+  candidate_pitches = seq(-90, 90, default_step),
+  candidate_yaws = seq(-180 + default_step, 180, default_step),
   paired = FALSE,
   label_error,
   label_nsamp = 625,
-  sim_download = FALSE
+  default_step = 1,
+  max_combinations = 1e+08
 )
 
 find.pitch(
   pitch2d,
-  candidate_pitches = NULL,
-  candidate_yaws = NULL,
-  candidate_view_elevations = NULL,
+  candidate_view_elevations = seq(-90, 90, default_step),
+  candidate_pitches = seq(-90, 90, default_step),
+  candidate_yaws = seq(-180 + default_step, 180, default_step),
   paired = FALSE,
   label_error,
   label_nsamp = 625,
-  sim_download = FALSE
+  default_step = 1,
+  max_combinations = 1e+08
 )
 }
 \arguments{
-\item{pitch2d}{Either a numeric scalar returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} or a numeric
-vector of >1 candidate 2D pitch angles (e.g., as returned by \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}), in degrees in the
-interval (-180, 180].}
+\item{pitch2d}{Either a numeric scalar returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} or a numeric vector of
+length > 1, in degrees in the interval (-180, 180]. When a scalar is supplied, landmark labeling
+uncertainty is incorporated using \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. When a vector is supplied, the smallest
+continuous angular interval containing those values is treated as the range of candidate 2D pitch
+angles.}
 
-\item{find}{Character vector. Which angle(s) to return between "pitch", "yaw", "view_elevation", and
-"pitch2d". Default (\code{NULL}) returns all.}
+\item{find}{Character vector specifying which angle(s) \code{find.3d()} should return. One or more of
+"pitch", "yaw", "view_elevation", and "pitch2d", or "all" to return all four. Default is "all".}
 
-\item{candidate_view_elevations}{Optional numeric vector: known or candidate camera elevation angle(s)
-relative to the object, in degrees, in the interval [-90, 90]. Convention: \code{-90} = seen from
-straight below, \code{0} = eye level, \code{90} = seen from straight above. Default is \code{NULL} (all view
-elevations considered). Provided values are rounded to the nearest integer.}
+\item{candidate_view_elevations}{Numeric vector of candidate camera elevation angles relative to the
+object, in degrees in the interval [-90, 90]. Convention: \code{-90} = seen from straight below,
+\code{0} = eye level, \code{90} = seen from straight above. By default, the entire [-90, 90] grid is
+evaluated at \code{default_step} resolution.}
 
-\item{candidate_pitches}{Optional numeric vector: known or candidate (3D) pitch angle(s), in degrees,
-in the interval [-90, 90]. Convention: \code{90} = pointed up, \code{0} = horizontally aligned, \code{-90} =
-pointed down. Default is \code{NULL} (all pitches considered). Provided values are rounded to the nearest
-integer.}
+\item{candidate_pitches}{Numeric vector of candidate 3D pitch angles, in degrees in the interval
+(-180, 180]. Convention: \code{90} = pointed up, \code{0} = horizontally aligned, \code{-90} =
+pointed down. By default, a [-90, 90] grid is evaluated at \code{default_step} resolution. Values
+outside [-90, 90] may be supplied explicitly when an extended pitch representation is desired.}
 
-\item{candidate_yaws}{Optional numeric vector: known or candidate yaw angle(s), in degrees, in the
+\item{candidate_yaws}{Numeric vector of candidate yaw angles, in degrees in the
 interval (-180, 180]. Convention: \code{0} = pointed right, \code{90} = pointed straight away, \code{-90} = pointed
-straight toward, \code{180} = pointed left. Default is \code{NULL} (all yaws considered). Provided values are
-rounded to the nearest integer.}
+straight toward, \code{180} = pointed left. By default, the entire (-180, 180] grid is evaluated at
+\code{default_step} resolution.}
 
 \item{label_error}{Positive numeric scalar specifying the error used to perturb each landmark
 coordinate, in the same units as the coordinates supplied to \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} (e.g., pixels).
-Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Required if \code{length(pitch2d)} = 1.}
+Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Required when \code{length(pitch2d) == 1}.}
 
-\item{label_nsamp}{Positive integer scalar specifying the approximate number of grid combinations to
-evaluate. Passed internally to \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Required if \code{length(pitch2d)} = 1.}
+\item{label_nsamp}{Positive integer scalar specifying the approximate number of landmark-error
+combinations evaluated internally by \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}. Used when \code{length(pitch2d) == 1}. Default
+is \code{625}.}
 
-\item{sim_download}{Logical scalar. If \code{TRUE}, the function will attempt to download the precomputed
-simulation dataset automatically if it is not found in the local cache. Default is \code{FALSE}
-(CRAN-friendly).}
+\item{default_step}{Positive numeric scalar specifying the step size, in degrees, used to generate
+default candidate-angle vectors. Must evenly divide 180 to ensure full coverage of default candidate
+ranges. Default is \code{1} (integers). Has no effect on candidate vectors supplied explicitly by the
+user.}
 
-\item{paired}{Logical scalar. If \code{TRUE}, a \code{data.frame} of yaws mapped to pitches will be returned; if
-\code{FALSE} (default), a vector of yaws or pitches.}
+\item{max_combinations}{Positive numeric scalar specifying the maximum total number of candidate
+pitch-yaw-view elevation combinations to evaluate, in order to prevent excessive memory use and
+computation. Default is \code{1e8}. Searches exceeding this value stop before candidate combinations are
+evaluated. Set to \code{Inf} to disable this limit.}
+
+\item{paired}{Logical scalar used by \code{find.pitch()} and \code{find.yaw()}. If \code{TRUE}, returns a
+\code{data.frame} of yaws mapped to pitches; if \code{FALSE} (default), a vector of yaws or pitches.}
 }
 \value{
 A \code{data.frame} with all or a subset of the following columns:
 \describe{
-\item{pitch}{integer: pitch angles (degrees) compatible with the provided arguments.}
-\item{yaw}{integer: yaw angles (degrees) compatible with the provided arguments.}
-\item{pitch2d}{numeric: projected 2D pitch angles (degrees) compatible with the provided arguments.}
-\item{view_elevation}{integer: elevation angles (degrees) compatible with the provided arguments.}
+\item{pitch}{numeric: pitch angles, in degrees.}
+\item{yaw}{numeric: yaw angles, in degrees.}
+\item{view_elevation}{numeric: view elevation angles, in degrees.}
+\item{pitch2d}{numeric: projected 2D pitch angles, in degrees.}
 }
-If no matches are found, the returned data.frame has zero rows.
+Only combinations compatible with the observed 2D pitch and supplied candidate constraints are
+returned. If no combinations are compatible, the returned \code{data.frame} has zero rows.
 
-For \code{find.pitch(..., paired = FALSE)} and \code{find.yaw(..., paired = FALSE)}, an integer vector of
-pitch or yaw angles compatible with the provided arguments.
+For \code{find.pitch(..., paired = FALSE)} and \code{find.yaw(..., paired = FALSE)}, an numeric vector of
+unique pitch or yaw angles compatible with the provided arguments.
 }
 \description{
-Using precomputed simulation data, recover the combinations of yaw, pitch, and view elevations
-(at 1° resolution) that produce a given observed 2D pitch. \code{find.pitch()} and \code{find.yaw()} are
-convenient wrappers for two common uses: finding 3D pitch and yaw, respectively.
+Evaluates combinations of candidate 3D pitch, yaw, and view elevation angles using \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}}
+and returns those whose projected 2D pitch is compatible with an observed 2D pitch. \code{find.pitch()} and
+\code{find.yaw()} are convenience wrappers for finding compatible 3D pitch and yaw orientations,
+respectively.
 }
 \details{
-The lookup is based on a precomputed Blender simulation grid. A 3D pyramid was generated and rotated
-by pitch, then yaw, then roll (equivalently to what \code{\link[=rotate3d]{rotate3d()}} does) for all 11,793,960
-integer combinations of pitch (\code{-90:90}), yaw (\code{-179:180}), and roll (\code{-90:90}). For each combination
-the base midpoint and tip were projected to 2D pixel coordinates with an orthographic camera.
-The cached simulation table stores the resulting projected geometry and derived 2D pitch values;
-\code{find.3d()} (and wrappers) then filter that table for combinations compatible with the requested 2D
-pitch and any optional candidate constraints. The codes used to generate the dataset are maintained at
-https://github.com/jocateme/araponga/tree/main/data-raw/simdata.
+For each unique combination of candidate angles, \code{find.3d()} (and wrappers) uses
+\code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}} to calculate the 2D pitch resulting from rotations by pitch, then yaw, then
+view elevation. It then retains combinations whose projected 2D pitch falls within the smallest
+continuous angular interval containing the candidate 2D pitch angles.
+
+The default pitch range is [-90, 90], which provides a conventional down-to-up representation.
+Explicit candidate pitches may extend over (-180, 180]. Such extended pitch values should be used
+intentionally because they necessarily have equivalent representations involving a different yaw
+(e.g., a pitch of 135° at a yaw of 10° is equivalent to a pitch of 45° at the opposite yaw
+of -170°).
+
+Candidate angles supplied explicitly are evaluated exactly and are not rounded. For candidate
+vectors left at their defaults, \code{default_step} determines the resolution of the search.
 }
 \examples{
-\donttest{
-# test that dataset is downloaded before running examples
-sim_path <- file.path(
-  tools::R_user_dir("araponga", "cache"),
-  "sim_data_parquet"
-)
-
-if(dir.exists(sim_path)){
-
-# hypothetical pitch2d from coordinates
+# pitch2d from hypothetical pixel coordinates
 p2d <- pitch2d.from.xy(10, 1, -12, 20)
 
 # pitches that project to `p2d` (± 2 pixel error) if seen from 30° (± 1° error) below
 find.pitch(
   p2d,
   candidate_view_elevations = -29:-31,
-  label_error = 2,
-  sim_download = FALSE
+  label_error = 2
   )
 
 # same returned values as from:
@@ -130,8 +139,7 @@ find.3d(
   p2d,
   find = "pitch",
   candidate_view_elevations = -29:-31,
-  label_error = 2,
-  sim_download = FALSE
+  label_error = 2
   )
 
 # similar to above, now given yaw between 5° and 15°
@@ -139,8 +147,7 @@ find.pitch(
   pitch2d = p2d,
   candidate_view_elevations = -29:-31,
   candidate_yaws = 5:15,
-  label_error = 2,
-  sim_download = FALSE
+  label_error = 2
   )
 
 # yaws that project to `p2d` (± 2 pixel error) if seen from 10° (± 2° error) below
@@ -150,14 +157,8 @@ find.yaw(
   label_error = 2
   )
 
-} else {
-message(
-  "Run download.simdata() first to enable this example."
-  )
-}
-}
-
 }
 \seealso{
-\code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}, \code{\link[=rotate3d]{rotate3d()}}, \code{\link[=download.simdata]{download.simdata()}}
+\code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}}, \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}, \code{\link[=pitch2d.w.error]{pitch2d.w.error()}}, \code{\link[=rotate3d]{rotate3d()}},
+\code{\link[=summarize.yaws]{summarize.yaws()}}
 }

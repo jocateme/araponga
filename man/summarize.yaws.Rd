@@ -46,26 +46,11 @@ summarize.yaws(30)
 summarize.yaws(c(-90, 90))
 
 # output from find.yaw()
-\donttest{
-# test that dataset is downloaded before running example
-sim_path <- file.path(
-  tools::R_user_dir("araponga", "cache"),
-  "sim_data_parquet"
-)
-
-if(dir.exists(sim_path)){
 yaws <- find.yaw(
   pitch2d = 14:16,
   candidate_view_elevations = -45,
-  candidate_pitches = 10:20,
-  sim_download = FALSE
+  candidate_pitches = 10:20
   )
 summarize.yaws(yaws, plot = TRUE)
-} else {
-message(
-  "Run download.simdata() first to enable this example."
-  )
-}
-}
 
 }

@@ -9,22 +9,36 @@ test_that("pitch2d.from.xy validates required coordinates", {
   )
 })
 
-test_that("pitch2d.from.xy validates coordinate type, length, and NA values", {
-  expect_error(
-    pitch2d.from.xy(numeric(0), 0, 0, 0),
-    "One or more empty coordinate arguments provided."
-  )
+test_that("pitch2d.from.xy validates coordinate type, length, and finite values", {
+  
   expect_error(
     pitch2d.from.xy("1", 0, 0, 0),
     "All coordinate arguments must be numeric."
   )
+  
   expect_error(
-    pitch2d.from.xy(1:2, 1:3, 0, 0),
-    "Coordinate arguments must have the same length or be scalars."
+    pitch2d.from.xy(
+      x_tip = c(1, 2),
+      y_tip = c(1, 2, 3),
+      x_base = c(0, 0),
+      y_base = c(0, 0)
+    ),
+    "same length"
   )
+  
   expect_error(
-    pitch2d.from.xy(c(1, NA), 0, 0, 0),
-    "Coordinate arguments must not contain NA values."
+    pitch2d.from.xy(c(1, NA), c(0, 0), c(0, 0), c(0, 0)),
+    "All coordinate arguments must contain only finite values."
+  )
+  
+  expect_error(
+    pitch2d.from.xy(c(1, Inf), c(0, 0), c(0, 0), c(0, 0)),
+    "All coordinate arguments must contain only finite values."
+  )
+  
+  expect_error(
+    pitch2d.from.xy(c(1, NaN), c(0, 0), c(0, 0), c(0, 0)),
+    "All coordinate arguments must contain only finite values."
   )
 })
 
@@ -93,4 +107,30 @@ test_that("pitch2d.from.xy warns and disables plotting for vectorized inputs", {
   )
 
   expect_equal(res, c(0, 90))
+})
+
+test_that("pitch2d.from.xy returns NA for zero-length projections", {
+  
+  expect_true(
+    is.na(
+      pitch2d.from.xy(
+        x_tip = 1,
+        y_tip = 2,
+        x_base = 1,
+        y_base = 2
+      )
+    )
+  )
+  
+  observed <- pitch2d.from.xy(
+    x_tip = c(1, 2),
+    y_tip = c(0, 0),
+    x_base = c(0, 2),
+    y_base = c(0, 0)
+  )
+  
+  expect_equal(
+    observed,
+    c(0, NA_real_)
+  )
 })

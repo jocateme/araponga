@@ -16,14 +16,13 @@ Ry(yaw = 0)
 Rx(roll = 0)
 }
 \arguments{
-\item{pitch}{Numeric scalar: angle in degrees for rotation about the Z axis. Defaults to \code{0}
-(no rotation).}
+\item{pitch}{Numeric scalar: angle of rotation about the Z axis, in degrees. Defaults to \code{0} (no
+rotation).}
 
-\item{yaw}{Numeric scalar: angle in degrees for rotation about the Y axis. Defaults to \code{0}
-(no rotation).}
+\item{yaw}{Numeric scalar: angle of rotation about the Y axis, in degrees. Defaults to \code{0} (no rotation).}
 
-\item{roll}{Numeric scalar: angle in degrees for rotation about the X axis. Defaults to \code{0}
-(no rotation).}
+\item{roll}{Numeric scalar: angle of rotation about the X axis, in degrees. Defaults to \code{0} (no
+rotation).}
 }
 \value{
 A numeric 3×3 matrix (class \code{matrix}).
@@ -31,6 +30,23 @@ A numeric 3×3 matrix (class \code{matrix}).
 \description{
 Create a 3×3 rotation matrix corresponding to sequential Euler rotations about Z, then Y,
 then X (i.e., ZYX or pitch–yaw–roll sequence).
+}
+\details{
+\code{Rz()}, \code{Ry()}, and \code{Rx()} construct elementary rotation matrices about
+the Z, Y, and X axes, respectively. \code{rotate3d()} combines these as
+
+\deqn{R = R_x(r) R_y(y) R_z(p),}
+
+where \eqn{p}, \eqn{y}, and \eqn{r} are pitch, yaw, and roll. When the
+resulting matrix is applied to a column vector, the rotations therefore
+occur in the order pitch, then yaw, then roll.
+
+Angles are not restricted to a particular interval because rotations are
+periodic; any finite value in degrees is accepted.
+
+In \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}}, the same X-axis rotation represented here by
+\code{roll} is used to incorporate view elevation. This represents relative
+viewing geometry and should not be confused with image-plane camera roll.
 }
 \examples{
 # rotate 45 about z, then 30 about y, then -80 about x

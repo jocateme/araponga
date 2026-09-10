@@ -1,78 +1,83 @@
-#' Find combinations of 3D orientations that project to an observed 2D pitch
+#' Find 3D orientations compatible with an observed 2D pitch
 #'
-#' Using precomputed simulation data, recover the combinations of yaw, pitch, and view elevations
-#' (at 1° resolution) that produce a given observed 2D pitch. `find.pitch()` and `find.yaw()` are
-#' convenient wrappers for two common uses: finding 3D pitch and yaw, respectively.
+#' Evaluates combinations of candidate 3D pitch, yaw, and view elevation angles using [pitch2d.from.3d()]
+#' and returns those whose projected 2D pitch is compatible with an observed 2D pitch. `find.pitch()` and
+#' `find.yaw()` are convenience wrappers for finding compatible 3D pitch and yaw orientations,
+#' respectively.
 #'
-#' @param pitch2d Either a numeric scalar returned by [pitch2d.from.xy()] or a numeric
-#'  vector of >1 candidate 2D pitch angles (e.g., as returned by [pitch2d.w.error()]), in degrees in the
-#'  interval (-180, 180].
-#' @param find Character vector. Which angle(s) to return between "pitch", "yaw", "view_elevation", and
-#'  "pitch2d". Default (`NULL`) returns all.
-#' @param candidate_view_elevations Optional numeric vector: known or candidate camera elevation angle(s)
-#'  relative to the object, in degrees, in the interval \[-90, 90\]. Convention: `-90` = seen from
-#'  straight below, `0` = eye level, `90` = seen from straight above. Default is `NULL` (all view
-#'  elevations considered). Provided values are rounded to the nearest integer.
-#' @param candidate_pitches Optional numeric vector: known or candidate (3D) pitch angle(s), in degrees,
-#'  in the interval \[-90, 90\]. Convention: `90` = pointed up, `0` = horizontally aligned, `-90` =
-#'  pointed down. Default is `NULL` (all pitches considered). Provided values are rounded to the nearest
-#'  integer.
-#' @param candidate_yaws Optional numeric vector: known or candidate yaw angle(s), in degrees, in the
+#' @param pitch2d Either a numeric scalar returned by [pitch2d.from.xy()] or a numeric vector of
+#'  length > 1, in degrees in the interval (-180, 180]. When a scalar is supplied, landmark labeling
+#'  uncertainty is incorporated using [pitch2d.w.error()]. When a vector is supplied, the smallest
+#'  continuous angular interval containing those values is treated as the range of candidate 2D pitch
+#'  angles.
+#' @param find Character vector specifying which angle(s) `find.3d()` should return. One or more of
+#'  "pitch", "yaw", "view_elevation", and "pitch2d", or "all" to return all four. Default is "all".
+#' @param candidate_view_elevations Numeric vector of candidate camera elevation angles relative to the
+#'  object, in degrees in the interval \[-90, 90\]. Convention: `-90` = seen from straight below,
+#'  `0` = eye level, `90` = seen from straight above. By default, the entire \[-90, 90\] grid is
+#'  evaluated at `default_step` resolution.
+#' @param candidate_pitches Numeric vector of candidate 3D pitch angles, in degrees in the interval
+#'  (-180, 180]. Convention: `90` = pointed up, `0` = horizontally aligned, `-90` =
+#'  pointed down. By default, a \[-90, 90\] grid is evaluated at `default_step` resolution. Values
+#'  outside \[-90, 90\] may be supplied explicitly when an extended pitch representation is desired.
+#' @param candidate_yaws Numeric vector of candidate yaw angles, in degrees in the
 #'  interval (-180, 180]. Convention: `0` = pointed right, `90` = pointed straight away, `-90` = pointed
-#'  straight toward, `180` = pointed left. Default is `NULL` (all yaws considered). Provided values are
-#'  rounded to the nearest integer.
+#'  straight toward, `180` = pointed left. By default, the entire (-180, 180] grid is evaluated at
+#'  `default_step` resolution.
 #' @param label_error Positive numeric scalar specifying the error used to perturb each landmark
 #'  coordinate, in the same units as the coordinates supplied to [pitch2d.from.xy()] (e.g., pixels).
-#'  Passed internally to [pitch2d.w.error()]. Required if `length(pitch2d)` = 1.
-#' @param label_nsamp Positive integer scalar specifying the approximate number of grid combinations to
-#'  evaluate. Passed internally to [pitch2d.w.error()]. Required if `length(pitch2d)` = 1.
-#' @param sim_download Logical scalar. If `TRUE`, the function will attempt to download the precomputed
-#'  simulation dataset automatically if it is not found in the local cache. Default is `FALSE`
-#'  (CRAN-friendly).
-#' @param paired Logical scalar. If `TRUE`, a `data.frame` of yaws mapped to pitches will be returned; if
-#'  `FALSE` (default), a vector of yaws or pitches.
+#'  Passed internally to [pitch2d.w.error()]. Required when `length(pitch2d) == 1`.
+#' @param label_nsamp Positive integer scalar specifying the approximate number of landmark-error
+#'  combinations evaluated internally by [pitch2d.w.error()]. Used when `length(pitch2d) == 1`. Default
+#'  is `625`.
+#' @param default_step Positive numeric scalar specifying the step size, in degrees, used to generate
+#'  default candidate-angle vectors. Must evenly divide 180 to ensure full coverage of default candidate
+#'  ranges. Default is `1` (integers). Has no effect on candidate vectors supplied explicitly by the
+#'  user.
+#' @param max_combinations Positive numeric scalar specifying the maximum total number of candidate
+#'  pitch-yaw-view elevation combinations to evaluate, in order to prevent excessive memory use and
+#'  computation. Default is `1e8`. Searches exceeding this value stop before candidate combinations are
+#'  evaluated. Set to `Inf` to disable this limit.
+#' @param paired Logical scalar used by `find.pitch()` and `find.yaw()`. If `TRUE`, returns a
+#'  `data.frame` of yaws mapped to pitches; if `FALSE` (default), a vector of yaws or pitches.
 #'
 #' @returns A `data.frame` with all or a subset of the following columns:
 #' \describe{
-#'   \item{pitch}{integer: pitch angles (degrees) compatible with the provided arguments.}
-#'   \item{yaw}{integer: yaw angles (degrees) compatible with the provided arguments.}
-#'   \item{pitch2d}{numeric: projected 2D pitch angles (degrees) compatible with the provided arguments.}
-#'   \item{view_elevation}{integer: elevation angles (degrees) compatible with the provided arguments.}
+#'   \item{pitch}{numeric: pitch angles, in degrees.}
+#'   \item{yaw}{numeric: yaw angles, in degrees.}
+#'   \item{view_elevation}{numeric: view elevation angles, in degrees.}
+#'   \item{pitch2d}{numeric: projected 2D pitch angles, in degrees.}
 #' }
-#' If no matches are found, the returned data.frame has zero rows.
+#' Only combinations compatible with the observed 2D pitch and supplied candidate constraints are
+#' returned. If no combinations are compatible, the returned `data.frame` has zero rows.
 #' 
-#' For `find.pitch(..., paired = FALSE)` and `find.yaw(..., paired = FALSE)`, an integer vector of
-#' pitch or yaw angles compatible with the provided arguments.
+#' For `find.pitch(..., paired = FALSE)` and `find.yaw(..., paired = FALSE)`, an numeric vector of
+#' unique pitch or yaw angles compatible with the provided arguments.
 #' 
 #' @details
-#' The lookup is based on a precomputed Blender simulation grid. A 3D pyramid was generated and rotated
-#' by pitch, then yaw, then roll (equivalently to what [rotate3d()] does) for all 11,793,960
-#' integer combinations of pitch (`-90:90`), yaw (`-179:180`), and roll (`-90:90`). For each combination
-#' the base midpoint and tip were projected to 2D pixel coordinates with an orthographic camera.
-#' The cached simulation table stores the resulting projected geometry and derived 2D pitch values;
-#' `find.3d()` (and wrappers) then filter that table for combinations compatible with the requested 2D
-#' pitch and any optional candidate constraints. The codes used to generate the dataset are maintained at
-#' https://github.com/jocateme/araponga/tree/main/data-raw/simdata.
+#' For each unique combination of candidate angles, `find.3d()` (and wrappers) uses
+#' [`pitch2d.from.3d()`] to calculate the 2D pitch resulting from rotations by pitch, then yaw, then
+#' view elevation. It then retains combinations whose projected 2D pitch falls within the smallest
+#' continuous angular interval containing the candidate 2D pitch angles.
+#' 
+#' The default pitch range is \[-90, 90\], which provides a conventional down-to-up representation.
+#' Explicit candidate pitches may extend over (-180, 180]. Such extended pitch values should be used
+#' intentionally because they necessarily have equivalent representations involving a different yaw
+#' (e.g., a pitch of 135° at a yaw of 10° is equivalent to a pitch of 45° at the opposite yaw
+#' of -170°).
+#' 
+#' Candidate angles supplied explicitly are evaluated exactly and are not rounded. For candidate
+#' vectors left at their defaults, `default_step` determines the resolution of the search.
 #'
 #' @examples
-#' \donttest{
-#' # test that dataset is downloaded before running examples
-#' sim_path <- file.path(
-#'   tools::R_user_dir("araponga", "cache"),
-#'   "sim_data_parquet"
-#' )
-#' 
-#' if(dir.exists(sim_path)){
-#' 
-#' # hypothetical pitch2d from coordinates
+#' # pitch2d from hypothetical pixel coordinates
 #' p2d <- pitch2d.from.xy(10, 1, -12, 20)
 #' 
 #' # pitches that project to `p2d` (± 2 pixel error) if seen from 30° (± 1° error) below
 #' find.pitch(
 #'   p2d,
 #'   candidate_view_elevations = -29:-31,
-#'   label_error = 2,
-#'   sim_download = FALSE
+#'   label_error = 2
 #'   )
 #'
 #' # same returned values as from:
@@ -80,8 +85,7 @@
 #'   p2d,
 #'   find = "pitch",
 #'   candidate_view_elevations = -29:-31,
-#'   label_error = 2,
-#'   sim_download = FALSE
+#'   label_error = 2
 #'   )
 #'
 #' # similar to above, now given yaw between 5° and 15°
@@ -89,8 +93,7 @@
 #'   pitch2d = p2d,
 #'   candidate_view_elevations = -29:-31,
 #'   candidate_yaws = 5:15,
-#'   label_error = 2,
-#'   sim_download = FALSE
+#'   label_error = 2
 #'   )
 #'
 #' # yaws that project to `p2d` (± 2 pixel error) if seen from 10° (± 2° error) below
@@ -99,26 +102,20 @@
 #'   candidate_view_elevations = -8:-12,
 #'   label_error = 2
 #'   )
-#' 
-#' } else {
-#' message(
-#'   "Run download.simdata() first to enable this example."
-#'   )
-#' }
-#' }
 #'
-#' @importFrom rlang .data
-#' @seealso [pitch2d.from.xy()], [pitch2d.w.error()], [rotate3d()], [download.simdata()]
+#' @seealso [pitch2d.from.3d()], [pitch2d.from.xy()], [pitch2d.w.error()], [rotate3d()],
+#'  [summarize.yaws()]
 #' @rdname find.3d
 #' @export
 find.3d <- function(pitch2d,
-                    find = NULL,
-                    candidate_view_elevations = NULL,
-                    candidate_pitches = NULL,
-                    candidate_yaws = NULL,
+                    find = "all",
+                    candidate_view_elevations = seq(-90, 90, default_step),
+                    candidate_pitches = seq(-90, 90, default_step),
+                    candidate_yaws = seq(-180 + default_step, 180, default_step),
                     label_error,
                     label_nsamp = 625,
-                    sim_download = FALSE){
+                    default_step = 1,
+                    max_combinations = 1e8){
   
   ## --- pitch2d ---
   if (missing(pitch2d) || length(pitch2d) == 0) {
@@ -132,47 +129,73 @@ find.3d <- function(pitch2d,
   }
   
   ## --- find ---
-  allowed_find <- c("pitch", "yaw", "view_elevation", "pitch2d")
-  if (!is.null(find)) {
-    if (!is.character(find) || length(find) == 0 || anyNA(find)) {
-      stop("`find` must be NULL or a character vector.", call. = FALSE)
-    }
-    bad_find <- setdiff(find, allowed_find)
-    if (length(bad_find) > 0) {
-      stop(sprintf(
-        "`find` contains invalid value(s): %s. Allowed values are: %s.",
-        paste(shQuote(bad_find), collapse = ", "),
-        paste(shQuote(allowed_find), collapse = ", ")
-      ), call. = FALSE)
-    }
+  find <- unique(unname(find))
+  allowed_find <- c("all", "pitch", "yaw", "view_elevation", "pitch2d")
+  if (!is.character(find) || length(find) == 0 || anyNA(find)) {
+    stop("`find` must be a character vector.", call. = FALSE)
+  }
+  bad_find <- setdiff(find, allowed_find)
+  if (length(bad_find) > 0) {
+    stop(sprintf(
+      "`find` contains invalid value(s): %s. Allowed values are: %s.",
+      paste(shQuote(bad_find), collapse = ", "),
+      paste(shQuote(allowed_find), collapse = ", ")
+    ), call. = FALSE)
+  }
+  if ("all" %in% find && length(find) > 1) {
+    stop("`\"all\"` cannot be combined with other values in `find`.",
+         call. = FALSE)
+  }
+  if(identical(find, "all")) find <- c("pitch", "yaw", "view_elevation", "pitch2d")
+  
+  ## --- default_step ---
+  if (!is.numeric(default_step) ||
+      length(default_step) != 1 ||
+      !is.finite(default_step) ||
+      default_step <= 0 ||
+      default_step > 180) {
+    stop("`default_step` must be a finite numeric scalar > 0 and <= 180.",
+         call. = FALSE)
+  }
+  
+  n_steps <- 180 / default_step
+  
+  if (abs(n_steps - round(n_steps)) > 1e-8) {
+    stop(
+      "`default_step` must evenly divide 180 degrees.",
+      call. = FALSE
+    )
   }
   
   ## --- candidate angle sets ---
-  if (!is.null(candidate_view_elevations)) {
-    if (!is.numeric(candidate_view_elevations) || any(!is.finite(candidate_view_elevations))) {
-      stop("`candidate_view_elevations` must be a finite numeric vector or NULL.", call. = FALSE)
-    }
-    if (any(candidate_view_elevations < -90 | candidate_view_elevations > 90)) {
-      stop("`candidate_view_elevations` must satisfy -90 <= value <= 90 degrees.", call. = FALSE)
-    }
+  if (!is.numeric(candidate_view_elevations) ||
+      length(candidate_view_elevations) == 0 ||
+      any(!is.finite(candidate_view_elevations))) {
+    stop("`candidate_view_elevations` must be a non-empty finite numeric vector.",
+         call. = FALSE)
+  }
+  if (any(candidate_view_elevations < -90 | candidate_view_elevations > 90)) {
+    stop("`candidate_view_elevations` must satisfy -90 <= value <= 90 degrees.", call. = FALSE)
   }
   
-  if (!is.null(candidate_pitches)) {
-    if (!is.numeric(candidate_pitches) || any(!is.finite(candidate_pitches))) {
-      stop("`candidate_pitches` must be a finite numeric vector or NULL.", call. = FALSE)
-    }
-    if (any(candidate_pitches < -90 | candidate_pitches > 90)) {
-      stop("`candidate_pitches` must satisfy -90 <= value <= 90 degrees.", call. = FALSE)
-    }
+  if (!is.numeric(candidate_pitches) ||
+      length(candidate_pitches) == 0 ||
+      any(!is.finite(candidate_pitches))) {
+    stop("`candidate_pitches` must be a non-empty finite numeric vector.",
+         call. = FALSE)
+  }
+  if (any(candidate_pitches <= -180 | candidate_pitches > 180)) {
+    stop("`candidate_pitches` must satisfy -180 < value <= 180 degrees.", call. = FALSE)
   }
   
-  if (!is.null(candidate_yaws)) {
-    if (!is.numeric(candidate_yaws) || any(!is.finite(candidate_yaws))) {
-      stop("`candidate_yaws` must be a finite numeric vector or NULL.", call. = FALSE)
-    }
-    if (any(candidate_yaws <= -180 | candidate_yaws > 180)) {
-      stop("`candidate_yaws` must satisfy -180 < value <= 180 degrees.", call. = FALSE)
-    }
+  if (!is.numeric(candidate_yaws) ||
+      length(candidate_yaws) == 0 ||
+      any(!is.finite(candidate_yaws))) {
+    stop("`candidate_yaws` must be a non-empty finite numeric vector.",
+         call. = FALSE)
+  }
+  if (any(candidate_yaws <= -180 | candidate_yaws > 180)) {
+    stop("`candidate_yaws` must satisfy -180 < value <= 180 degrees.", call. = FALSE)
   }
   
   ## --- label_error ---
@@ -199,29 +222,18 @@ find.3d <- function(pitch2d,
   }
   label_nsamp <- as.integer(round(label_nsamp))
   
-  ## --- sim_download ---
-  if(!(is.logical(sim_download) && length(sim_download) == 1 && !is.na(sim_download))){
-    stop("`sim_download` must be a logical scalar.", call. = FALSE)
+  ## --- max_combinations ---
+  if (!is.numeric(max_combinations) ||
+      length(max_combinations) != 1 ||
+      is.na(max_combinations) ||
+      max_combinations <= 0) {
+    stop(
+      "`max_combinations` must be a positive numeric scalar.",
+      call. = FALSE
+    )
   }
   
-  dest_dir <- tools::R_user_dir("araponga", "cache")
-  dataset_dir <- file.path(dest_dir, .simdata_dirname)
-  
-  if (!.simdata_is_current()) {
-    if (!sim_download) {
-      stop(
-        "The current simulation dataset was not found locally. ",
-        "Run `download.simdata(overwrite = TRUE)` or set `sim_download = TRUE` ",
-        "to download the current dataset.",
-        call. = FALSE
-      )
-    }
-    
-    download.simdata(overwrite = TRUE)
-  }
-  
-  sim_data <- arrow::open_dataset(dataset_dir)
-  
+  ## --- pitch2d uncertainty ---
   if(length(pitch2d) > 1){
     pitch2d_w_error <- pitch2d
   } else {
@@ -230,50 +242,102 @@ find.3d <- function(pitch2d,
                                        label_nsamp = label_nsamp)
   }
   
-  summ <- summarize.yaws(pitch2d_w_error)
+  ## -- compatible pitch2d interval --
+  summ <- summarize.yaws(pitch2d_w_error, tie_action = "error")
   summ$from <- summ$from - 1e-4
   summ$to <- summ$to + 1e-4
   
-  if(summ$wrap){
-    filters <- list(dplyr::expr((.data$pitch2d >= !!summ$from & .data$pitch2d <= 180) |
-                             (.data$pitch2d > -180 & .data$pitch2d <= !!summ$to)))
-  } else {
-    filters <- list(dplyr::expr(.data$pitch2d >= !!summ$from & .data$pitch2d <= !!summ$to))
+  ## --- candidate combinations ---
+  candidate_pitches <- unique(candidate_pitches)
+  candidate_yaws <- unique(candidate_yaws)
+  candidate_view_elevations <- unique(candidate_view_elevations)
+  
+  ny <- length(candidate_yaws)
+  np <- length(candidate_pitches)
+  ne <- length(candidate_view_elevations)
+  
+  n_combinations <-
+    as.double(ny) *
+    as.double(np) *
+    as.double(ne)
+  
+  if (n_combinations > max_combinations) {
+    stop(
+      sprintf(
+        paste0(
+          "The requested candidate angles produce %.0f combinations, ",
+          "which exceeds `max_combinations = %.0f`. ",
+          "Use narrower candidate ranges, a larger `default_step`, ",
+          "or increase `max_combinations` intentionally."
+        ),
+        n_combinations,
+        max_combinations
+      ),
+      call. = FALSE
+    )
+  }
+
+  ## --- chunk by angle with longest vector ---
+  
+  candidate_angles <- list(
+    yaw = candidate_yaws,
+    pitch = candidate_pitches,
+    view_elevation = candidate_view_elevations
+  )
+  
+  n_candidates <- lengths(candidate_angles)
+  chunk_angle <- names(which.max(n_candidates))
+  chunk_values <- candidate_angles[[chunk_angle]]
+  
+  collected <- vector("list", length(chunk_values))
+  
+  for(i in seq_along(chunk_values)){
+    
+    chunk_candidates <- candidate_angles
+    chunk_candidates[[chunk_angle]] <- chunk_values[i]
+    
+    grid <- do.call(
+      expand.grid,
+      c(
+        chunk_candidates,
+        list(KEEP.OUT.ATTRS = FALSE)
+      )
+    )
+    grid$pitch2d <- pitch2d.from.3d(grid$pitch,
+                                    grid$yaw,
+                                    grid$view_elevation)
+    
+    if(summ$wrap){
+      keep <- is.finite(grid$pitch2d) &
+        ((grid$pitch2d >= summ$from & grid$pitch2d <= 180) |
+        (grid$pitch2d > -180 & grid$pitch2d <= summ$to))
+    } else {
+      keep <- is.finite(grid$pitch2d) &
+        grid$pitch2d >= summ$from &
+        grid$pitch2d <= summ$to
+    }
+    
+    collected[[i]] <- unique(grid[keep, find, drop = FALSE])
+    
   }
   
-  if(!is.null(candidate_pitches)){
-    filters <- c(filters,
-                 dplyr::expr(.data$pitch %in% !!as.integer(round(candidate_pitches))))
-  }
+  collected <- unique(do.call(rbind, collected))
+  rownames(collected) <- NULL
   
-  if(!is.null(candidate_view_elevations)){
-    filters <- c(filters,
-                 dplyr::expr(.data$view_elevation %in% !!as.integer(round(candidate_view_elevations))))
-  }
-  
-  if(!is.null(candidate_yaws)){
-    filters <- c(filters,
-                 dplyr::expr(.data$yaw %in% !!as.integer(round(candidate_yaws))))
-  }
-  
-  sim_data <- sim_data |> dplyr::filter(!!!filters)
-  if(!is.null(find)){
-    sim_data <- sim_data |> dplyr::select(!!!dplyr::syms(find))
-  }
-  collected <- sim_data |> dplyr::distinct() |> dplyr::collect()
   return(as.data.frame(collected))
   
 }
 #' @rdname find.3d
 #' @export
 find.yaw <- function(pitch2d,
-                     candidate_view_elevations = NULL,
-                     candidate_pitches = NULL,
-                     candidate_yaws = NULL,
+                     candidate_view_elevations = seq(-90, 90, default_step),
+                     candidate_pitches = seq(-90, 90, default_step),
+                     candidate_yaws = seq(-180 + default_step, 180, default_step),
                      paired = FALSE,
                      label_error,
                      label_nsamp = 625,
-                     sim_download = FALSE){
+                     default_step = 1,
+                     max_combinations = 1e8){
   
   if(!(is.logical(paired) && length(paired) == 1 && !is.na(paired))){
     stop("`paired` must be a logical scalar.", call. = FALSE)
@@ -282,7 +346,7 @@ find.yaw <- function(pitch2d,
   if(paired){
     find = c("pitch", "yaw")
   } else {
-    find <- "yaw"
+    find = "yaw"
   }
   
   df <- find.3d(pitch2d = pitch2d,
@@ -292,7 +356,8 @@ find.yaw <- function(pitch2d,
                 candidate_view_elevations = candidate_view_elevations,
                 label_error = label_error,
                 label_nsamp = label_nsamp,
-                sim_download = sim_download)
+                default_step = default_step,
+                max_combinations = max_combinations)
   
   if(paired){
     df <- df[order(df$pitch, df$yaw),]
@@ -305,13 +370,14 @@ find.yaw <- function(pitch2d,
 #' @rdname find.3d
 #' @export
 find.pitch <- function(pitch2d,
-                       candidate_pitches = NULL,
-                       candidate_yaws = NULL,
-                       candidate_view_elevations = NULL,
+                       candidate_view_elevations = seq(-90, 90, default_step),
+                       candidate_pitches = seq(-90, 90, default_step),
+                       candidate_yaws = seq(-180 + default_step, 180, default_step),
                        paired = FALSE,
                        label_error,
                        label_nsamp = 625,
-                       sim_download = FALSE){
+                       default_step = 1,
+                       max_combinations = 1e8){
   
   if(!(is.logical(paired) && length(paired) == 1 && !is.na(paired))){
     stop("`paired` must be a logical scalar.", call. = FALSE)
@@ -320,7 +386,7 @@ find.pitch <- function(pitch2d,
   if(paired){
     find = c("yaw", "pitch")
   } else {
-    find <- "pitch"
+    find = "pitch"
   }
   
   df <- find.3d(pitch2d = pitch2d,
@@ -330,7 +396,8 @@ find.pitch <- function(pitch2d,
                 candidate_view_elevations = candidate_view_elevations,
                 label_error = label_error,
                 label_nsamp = label_nsamp,
-                sim_download = sim_download)
+                default_step = default_step,
+                max_combinations = max_combinations)
   
   if(paired){
     df <- df[order(df$yaw, df$pitch),]

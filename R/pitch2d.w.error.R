@@ -77,6 +77,14 @@ pitch2d.w.error <- function(pitch2d,
                                              rep(b_x, each = n, times = n^2),
                                              rep(b_y, times = n^3))))
   
+  pitch2d.all <- pitch2d.all[!is.na(pitch2d.all)]
+  if (length(pitch2d.all) == 0) {
+    stop(
+      "All simulated landmark combinations produced undefined 2D pitches.",
+      call. = FALSE
+    )
+  }
+  
   if(add_boundaries){
     
     p2d.summ <- summarize.yaws(pitch2d.all)

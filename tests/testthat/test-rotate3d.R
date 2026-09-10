@@ -124,14 +124,71 @@ test_that("rotation matrices are orthonormal with determinant one", {
   }
 })
 
-test_that("Rz, Ry, and Rx validate scalar numeric arguments", {
-  expect_error(Rz("a"), "`pitch` must be a numeric scalar.")
-  expect_error(Rz(c(1, 2)), "`pitch` must be a numeric scalar.")
-
-  # This reflects the current error message in Ry().
-  expect_error(Ry("a"), "`roll` must be a numeric scalar.")
-  expect_error(Ry(c(1, 2)), "`roll` must be a numeric scalar.")
-
-  expect_error(Rx("a"), "`roll` must be a numeric scalar.")
-  expect_error(Rx(c(1, 2)), "`roll` must be a numeric scalar.")
+test_that("Rz, Ry, and Rx validate finite numeric scalar arguments", {
+  
+  # pitch
+  expect_error(
+    Rz("a"),
+    "`pitch` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rz(c(1, 2)),
+    "`pitch` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rz(NA_real_),
+    "`pitch` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rz(Inf),
+    "`pitch` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rz(NaN),
+    "`pitch` must be a finite numeric scalar."
+  )
+  
+  # yaw
+  expect_error(
+    Ry("a"),
+    "`yaw` must be a finite numeric scalar."
+  )
+  expect_error(
+    Ry(c(1, 2)),
+    "`yaw` must be a finite numeric scalar."
+  )
+  expect_error(
+    Ry(NA_real_),
+    "`yaw` must be a finite numeric scalar."
+  )
+  expect_error(
+    Ry(Inf),
+    "`yaw` must be a finite numeric scalar."
+  )
+  expect_error(
+    Ry(NaN),
+    "`yaw` must be a finite numeric scalar."
+  )
+  
+  # roll
+  expect_error(
+    Rx("a"),
+    "`roll` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rx(c(1, 2)),
+    "`roll` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rx(NA_real_),
+    "`roll` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rx(Inf),
+    "`roll` must be a finite numeric scalar."
+  )
+  expect_error(
+    Rx(NaN),
+    "`roll` must be a finite numeric scalar."
+  )
 })

@@ -50,16 +50,6 @@ pak::pak("jocateme/araponga")
 The development version may include changes that have not yet been
 released on CRAN.
 
-The main angle-recovery functions use a precomputed simulation dataset.
-Download it once before using `find.3d()`, `find.pitch()`, or
-`find.yaw()`:
-
-``` r
-download.simdata()
-```
-
-The dataset is cached locally and reused in future sessions.
-
 ## Basic workflow
 
 The general workflow is:

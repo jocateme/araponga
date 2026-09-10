@@ -10,11 +10,12 @@
 #' @param plot Logical scalar. `TRUE` draws a diagnostic plot with base-tip segment and calculated 2D
 #'  pitch angle. Plotting is only supported for single base-tip pair.
 #'
-#' @returns Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°].
-#'  Convention: `0` points right, `90` points up, `-90` points down, `180` points left.
+#' @returns
+#' Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°]. When tip and
+#' base coincide, the direction is undefined and `NA` is returned.
 #'
-#'  Scalar outputs also include an `"xy"` attribute containing the input
-#'  coordinates, which makes it directly compatible with [find.3d()].
+#' Scalar outputs also include an `"xy"` attribute containing the input
+#' coordinates, which makes it directly compatible with [find.3d()].
 #'  
 #' @details
 #' The calculation uses the two-landmark vector
@@ -67,8 +68,24 @@ pitch2d.from.xy <- function(x_tip,
   x_base <- rep(x_base, length.out = n)
   y_base <- rep(y_base, length.out = n)
   
-  if (any(is.na(x_tip) | is.na(y_tip) | is.na(x_base) | is.na(y_base))) {
-    stop("Coordinate arguments must not contain NA values.", call. = FALSE)
+  if (!is.numeric(x_tip) ||
+      !is.numeric(y_tip) ||
+      !is.numeric(x_base) ||
+      !is.numeric(y_base)) {
+    stop(
+      "All coordinate arguments must be numeric.",
+      call. = FALSE
+    )
+  }
+  
+  if (any(!is.finite(x_tip)) ||
+      any(!is.finite(y_tip)) ||
+      any(!is.finite(x_base)) ||
+      any(!is.finite(y_base))) {
+    stop(
+      "All coordinate arguments must contain only finite values.",
+      call. = FALSE
+    )
   }
   
   if (!is.logical(plot) || length(plot) != 1) stop("`plot` must be a logical scalar.", call. = FALSE)
@@ -80,7 +97,13 @@ pitch2d.from.xy <- function(x_tip,
   ## compute 2D pitch
   dx <- x_tip - x_base
   dy <- y_tip - y_base
+  
   pitch2d <- rad2deg(atan2(dy, dx))
+  
+  # zero-length projection = degenerate
+  proj_length_sq <- dx^2 + dy^2
+  degenerate <- proj_length_sq <= .Machine$double.eps
+  pitch2d[degenerate] <- NA
   
   ## plot (scalar only)
   if(plot){
@@ -100,26 +123,30 @@ pitch2d.from.xy <- function(x_tip,
                     lty = 2)
     graphics::abline(h = y_base,
                      lty = 2)
-    angles <- deg2rad(seq(from = min(0, pitch2d),
-                          to = max(0, pitch2d),
-                          by = 0.01))
-    r <- 0.2*half
-    graphics::lines(x = c(x_base,
-                          x_base + r*cos(angles),
-                          x_base),
-                    y = c(y_base,
-                          y_base + r*sin(angles),
-                          y_base),
-                    col = "darkblue")
-    if(pitch2d < 0){
-      ytxt <- min(y_base + 0.1*diff(ylim) * sin(angles))
-    } else {
-      ytxt <- max(y_base + 0.1*diff(ylim) * sin(angles))
+    
+    if(!is.na(pitch2d)){
+      angles <- deg2rad(seq(from = min(0, pitch2d),
+                            to = max(0, pitch2d),
+                            by = 0.01))
+      r <- 0.2*half
+      graphics::lines(x = c(x_base,
+                            x_base + r*cos(angles),
+                            x_base),
+                      y = c(y_base,
+                            y_base + r*sin(angles),
+                            y_base),
+                      col = "darkblue")
+      if(pitch2d < 0){
+        ytxt <- min(y_base + 0.1*diff(ylim) * sin(angles))
+      } else {
+        ytxt <- max(y_base + 0.1*diff(ylim) * sin(angles))
+      }
+      graphics::text(x = max(x_base + 0.1*diff(xlim) * cos(angles)),
+                     y =  ytxt,
+                     labels = paste0(round(pitch2d, 2), "\u00B0"),
+                     col = "darkblue")
     }
-    graphics::text(x = max(x_base + 0.1*diff(xlim) * cos(angles)),
-                   y =  ytxt,
-                   labels = paste0(round(pitch2d, 2), "\u00B0"),
-                   col = "darkblue")
+    
     graphics::points(x = c(x_base, x_tip),
                      y = c(y_base, y_tip),
                      col = c("darkgreen", "darkred"),
