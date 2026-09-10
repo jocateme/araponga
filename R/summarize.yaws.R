@@ -130,7 +130,7 @@ summarize.yaws <- function(yaws,
     
     plot.angles(yaws, "yaw",
                 labels = FALSE)
-    if(wrap){
+    if(chosen$wrap){
       yaws_plot <- deg2rad(c(seq(chosen$from, 180, 0.1),
                              seq(-180, chosen$to, 0.1)))
       

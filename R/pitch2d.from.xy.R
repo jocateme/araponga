@@ -56,6 +56,16 @@ pitch2d.from.xy <- function(x_tip,
     stop("All coordinate arguments must be numeric.", call. = FALSE)
   }
   
+  if (any(!is.finite(x_tip)) ||
+      any(!is.finite(y_tip)) ||
+      any(!is.finite(x_base)) ||
+      any(!is.finite(y_base))) {
+    stop(
+      "All coordinate arguments must contain only finite values.",
+      call. = FALSE
+    )
+  }
+  
   # recycling rules: allow scalar vs vector, but lengths must be compatible
   n <- max(length(x_tip), length(y_tip), length(x_base), length(y_base))
   if (any(c(length(x_tip), length(y_tip), length(x_base), length(y_base)) != n &
@@ -68,29 +78,15 @@ pitch2d.from.xy <- function(x_tip,
   x_base <- rep(x_base, length.out = n)
   y_base <- rep(y_base, length.out = n)
   
-  if (!is.numeric(x_tip) ||
-      !is.numeric(y_tip) ||
-      !is.numeric(x_base) ||
-      !is.numeric(y_base)) {
-    stop(
-      "All coordinate arguments must be numeric.",
-      call. = FALSE
-    )
+  if (!is.logical(plot) || length(plot) != 1 || is.na(plot)) {
+    stop("`plot` must be a logical scalar.", call. = FALSE)
   }
   
-  if (any(!is.finite(x_tip)) ||
-      any(!is.finite(y_tip)) ||
-      any(!is.finite(x_base)) ||
-      any(!is.finite(y_base))) {
-    stop(
-      "All coordinate arguments must contain only finite values.",
+  if (plot && n != 1) {
+    warning(
+      "Setting `plot = FALSE`; plotting is only supported when all coordinate arguments are length 1.",
       call. = FALSE
     )
-  }
-  
-  if (!is.logical(plot) || length(plot) != 1) stop("`plot` must be a logical scalar.", call. = FALSE)
-  if (plot && n != 1){
-    warning("Setting `plot = FALSE`; plotting is only supported when all coordinate arguments are length 1.", call. = FALSE)
     plot <- FALSE
   }
   

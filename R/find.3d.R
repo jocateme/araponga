@@ -51,7 +51,7 @@
 #' Only combinations compatible with the observed 2D pitch and supplied candidate constraints are
 #' returned. If no combinations are compatible, the returned `data.frame` has zero rows.
 #' 
-#' For `find.pitch(..., paired = FALSE)` and `find.yaw(..., paired = FALSE)`, an numeric vector of
+#' For `find.pitch(..., paired = FALSE)` and `find.yaw(..., paired = FALSE)`, a numeric vector of
 #' unique pitch or yaw angles compatible with the provided arguments.
 #' 
 #' @details

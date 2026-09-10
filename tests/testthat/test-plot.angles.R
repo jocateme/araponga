@@ -59,3 +59,16 @@ test_that("plot.angles runs when adding to an existing plot", {
   plot.angles(0:10, type = "yaw", labels = FALSE)
   expect_no_error(plot.angles(20:30, type = "yaw", add = TRUE, labels = FALSE))
 })
+
+test_that("plot.angles displays extended pitches", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  expect_no_error(
+    plot.angles(135, type = "pitch", labels = FALSE)
+  )
+  
+  expect_no_error(
+    plot.angles(-135, type = "pitch", labels = FALSE)
+  )
+})

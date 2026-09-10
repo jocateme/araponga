@@ -23,7 +23,7 @@
 #' # Simulate the effect of ±1 pixel labeling uncertainty
 #' pitch2d.w.error(p2d, label_error = 1)
 #' 
-#' #' # Simulate the effect of ±5 pixel labeling uncertainty
+#' # Simulate the effect of ±5 pixel labeling uncertainty
 #' pitch2d.w.error(p2d, label_error = 5)
 #' 
 #' @seealso [pitch2d.from.xy()]

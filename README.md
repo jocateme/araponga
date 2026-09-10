@@ -103,7 +103,7 @@ possible_yaws <- find.yaw(
 plot.angles(possible_yaws, type = "yaw")
 ```
 
-An important point is that the`candidate_...` arguments define which 3D
+An important point is that the `candidate_...` arguments define which 3D
 configurations are considered plausible before compatible angles are
 returned.
 

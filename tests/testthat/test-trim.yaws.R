@@ -14,13 +14,44 @@ test_that("trim.yaws validates required arguments and scalar parameters", {
   expect_error(trim.yaws(1, 2, min_sep = -1, max_sep = 1), "'min_sep' must be >= 0.")
   expect_error(trim.yaws(1, 2, min_sep = 0, max_sep = -1), "'max_sep' must be >= 0.")
   expect_error(trim.yaws(1, 2, min_sep = 2, max_sep = 1), "'min_sep' must be <= 'max_sep'.")
+  
+  expect_error(
+    trim.yaws(1, 2, min_sep = 0, max_sep = 361),
+    "'max_sep' must be <= 360."
+  )
+  
+  expect_error(
+    trim.yaws(1, 2, min_sep = 0, max_sep = 361),
+    "'max_sep' must be <= 360."
+  )
+
 })
 
 test_that("trim.yaws validates yaw vectors and bounds", {
-  expect_error(trim.yaws("a", 1, min_sep = 0, max_sep = 1), "'ccw_yaws' and 'cw_yaws' must be numeric vectors.")
-  expect_error(trim.yaws(1, "a", min_sep = 0, max_sep = 1), "'ccw_yaws' and 'cw_yaws' must be numeric vectors.")
-  expect_error(trim.yaws(c(1, NA), 1, min_sep = 0, max_sep = 1), "'ccw_yaws' and 'cw_yaws' must not contain NA values.")
-  expect_error(trim.yaws(1, c(1, NA), min_sep = 0, max_sep = 1), "'ccw_yaws' and 'cw_yaws' must not contain NA values.")
+  expect_error(
+    trim.yaws("a", 1, min_sep = 0, max_sep = 1),
+    "'ccw_yaws' and 'cw_yaws' must be finite numeric vectors."
+  )
+  
+  expect_error(
+    trim.yaws(1, "a", min_sep = 0, max_sep = 1),
+    "'ccw_yaws' and 'cw_yaws' must be finite numeric vectors."
+  )
+  
+  expect_error(
+    trim.yaws(c(1, NA), 1, min_sep = 0, max_sep = 1),
+    "'ccw_yaws' and 'cw_yaws' must be finite numeric vectors."
+  )
+  
+  expect_error(
+    trim.yaws(1, c(1, NA), min_sep = 0, max_sep = 1),
+    "'ccw_yaws' and 'cw_yaws' must be finite numeric vectors."
+  )
+  
+  expect_error(
+    trim.yaws(c(1, Inf), 1, min_sep = 0, max_sep = 1),
+    "'ccw_yaws' and 'cw_yaws' must be finite numeric vectors."
+  )
 
   expect_error(trim.yaws(-180, 1, min_sep = 0, max_sep = 1), "Yaw angles must satisfy -180 < yaw <= 180 degrees.")
   expect_error(trim.yaws(1, -180, min_sep = 0, max_sep = 1), "Yaw angles must satisfy -180 < yaw <= 180 degrees.")
@@ -110,5 +141,38 @@ test_that("trim.yaws plots when all yaws are excluded", {
       max_sep = 180,
       plot = TRUE
     )
+  )
+})
+
+test_that("trim.yaws handles wrap-around directional separation", {
+  
+  res <- trim.yaws(
+    ccw_yaws = -170,
+    cw_yaws = 170,
+    min_sep = 15,
+    max_sep = 25
+  )
+  
+  expect_equal(res$trimmed_ccw_yaws, -170)
+  expect_equal(res$trimmed_cw_yaws, 170)
+})
+
+test_that("trim.yaws handles a full-circle separation range", {
+  
+  res <- trim.yaws(
+    ccw_yaws = c(-170, 0, 100),
+    cw_yaws = c(-100, 20, 180),
+    min_sep = 0,
+    max_sep = 360
+  )
+  
+  expect_equal(
+    res$trimmed_ccw_yaws,
+    c(-170, 0, 100)
+  )
+  
+  expect_equal(
+    res$trimmed_cw_yaws,
+    c(-100, 20, 180)
   )
 })

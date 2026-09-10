@@ -236,7 +236,7 @@ gapes <- sort(unique(as.vector(outer(upper_pitch, lower_pitch, "-"))))
 gapes
 ```
 
-Given our assumptions, the possible gape angles range from 22° to 72°.
+Given our assumptions, the possible gape angles range from 21° to 72°.
 
 This calculation allows any possible upper mandible pitch to combine with any possible lower mandible pitch. If we assume the beak opens in a vertical plane — i.e., if the head is not tilted sideways, a reasonable assumption for singing bellbirds —, we can extract possible gapes on a per-yaw basis. The `paired` argument in `find.pitch()` facilitates that:
 
@@ -273,7 +273,7 @@ per_yaw_gapes <- sort(unique(per_yaw_gapes))
 per_yaw_gapes
 ```
 
-Gape is now estimated between 34° and 63°.
+Gape is now estimated between 33° and 63°.
 
 ## What if I'm interested in yaw?
 

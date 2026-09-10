@@ -99,7 +99,7 @@ A \code{data.frame} with all or a subset of the following columns:
 Only combinations compatible with the observed 2D pitch and supplied candidate constraints are
 returned. If no combinations are compatible, the returned \code{data.frame} has zero rows.
 
-For \code{find.pitch(..., paired = FALSE)} and \code{find.yaw(..., paired = FALSE)}, an numeric vector of
+For \code{find.pitch(..., paired = FALSE)} and \code{find.yaw(..., paired = FALSE)}, a numeric vector of
 unique pitch or yaw angles compatible with the provided arguments.
 }
 \description{

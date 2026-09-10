@@ -179,7 +179,7 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
                        labels,
                        add){
   
-  fullcircle <- any(abs(pitches) > 90) & any(abs(pitches) < 90)
+  fullcircle <- any(abs(pitches) > 90)
   
   pitches <- deg2rad(unique(pitches))
   

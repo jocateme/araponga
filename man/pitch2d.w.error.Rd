@@ -40,7 +40,7 @@ p2d <- pitch2d.from.xy(x_tip  = 100, y_tip  = 80, x_base = 110, y_base = 120)
 # Simulate the effect of ±1 pixel labeling uncertainty
 pitch2d.w.error(p2d, label_error = 1)
 
-#' # Simulate the effect of ±5 pixel labeling uncertainty
+# Simulate the effect of ±5 pixel labeling uncertainty
 pitch2d.w.error(p2d, label_error = 5)
 
 }

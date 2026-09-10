@@ -6,21 +6,28 @@
 #' constraints.
 #'
 #' @details
-#' Given two sets of candidate yaw angles, `trim.yaws()` removes elements from each set that
-#' do not have at least one partner in the other set that is at least `min_sep` and up to
-#' `max_sep` clockwise (for `ccw_yaws` set) or counterclockwise (for `cw_yaws`) from it. In
-#' other words, each retained `ccw_yaws` angle will be `>= min_sep` and `<= max_sep`
-#' counterclockwise of at least one `cw_yaws` angle. Analogously, each retained `cw_yaws` angle
-#' will be `>= min_sep` and `<= max_sep` clockwise of at least one `ccw_yaws` angle.
+#' Given two sets of candidate yaw angles, `trim.yaws()` retains angles that
+#' have at least one compatible partner in the other set. Directional
+#' separation is measured counterclockwise from `cw_yaws` to `ccw_yaws`
+#' and is represented in the interval \[0, 360).
+#'
+#' For a pair of angles \eqn{c} from `ccw_yaws` and \eqn{w} from `cw_yaws`,
+#' their directional separation is
+#'
+#' \deqn{(c - w) \bmod 360.}
+#'
+#' A pair is compatible when this separation is greater than or equal to
+#' `min_sep` and less than or equal to `max_sep`. Each returned angle
+#' therefore has at least one compatible partner in the other returned set.
 #'
 #' @param ccw_yaws Numeric vector: candidate yaw angles known/expected to be
 #'  **counterclockwise** of `cw_yaws` (degrees, in the interval (-180, 180]).
 #' @param cw_yaws Numeric vector: candidate yaw angles known/expected to be **clockwise** of
 #'  `ccw_yaws` (degrees, in the interval (-180, 180]).
-#' @param min_sep Non-negative numeric scalar: the minimum angular separation (degrees) allowed
-#'  between a value in one set and a partner in the other set.
-#' @param max_sep Non-negative numeric scalar: the maximum angular separation (degrees) allowed
-#'  between a value in one set and a partner in the other set.
+#' @param min_sep Numeric scalar: minimum directional angular separation in degrees, satisfying
+#'  `0 <= min_sep < 360`.
+#' @param max_sep Numeric scalar: maximum directional angular separation in degrees, satisfying
+#'  `min_sep <= max_sep <= 360`.
 #' @param plot Logical scalar. `TRUE` draws diagnostic plots with retained (blue) and excluded
 #'  (red) angles for each set. 
 #'
@@ -64,12 +71,15 @@ trim.yaws <- function(ccw_yaws,
   if (min_sep < 0) stop("'min_sep' must be >= 0.", call. = FALSE)
   if (max_sep < 0) stop("'max_sep' must be >= 0.", call. = FALSE)
   if (min_sep > max_sep) stop("'min_sep' must be <= 'max_sep'.", call. = FALSE)
+  if (max_sep > 360) stop("'max_sep' must be <= 360.", call. = FALSE)
+  if (min_sep >= 360) stop("'min_sep' must be < 360.", call. = FALSE)
   
-  if (!is.numeric(ccw_yaws) || !is.numeric(cw_yaws)) {
-    stop("'ccw_yaws' and 'cw_yaws' must be numeric vectors.", call. = FALSE)
-  }
-  if (any(is.na(ccw_yaws)) || any(is.na(cw_yaws))) {
-    stop("'ccw_yaws' and 'cw_yaws' must not contain NA values.", call. = FALSE)
+  if (!is.numeric(ccw_yaws) || !is.numeric(cw_yaws) ||
+      any(!is.finite(ccw_yaws)) || any(!is.finite(cw_yaws))) {
+    stop(
+      "'ccw_yaws' and 'cw_yaws' must be finite numeric vectors.",
+      call. = FALSE
+    )
   }
   
   # angle range check; require -180 < angle <= 180
@@ -87,60 +97,20 @@ trim.yaws <- function(ccw_yaws,
     return(list(trimmed_ccw_yaws = numeric(0), trimmed_cw_yaws = numeric(0)))
   }
   
-  # iterative mutual trimming
-  repeat{
-    
-    # lower and upper endpoints for allowed cw_yaws for each ccw_yaw
-    low_ccw  <- ((ccw_yaws - max_sep + 180) %% 360) - 180
-    high_ccw <- ((ccw_yaws - min_sep + 180) %% 360) - 180
-    
-    # idx_low_ccw = number of cw_yaws < low_ccw
-    idx_low_ccw  <- findInterval(low_ccw - 1e-10, cw_yaws) # 1e-10 to make boundary inclusive
-    # idx_high_ccw = number of cw_yaws <= high_ccw
-    idx_high_ccw <- findInterval(high_ccw, cw_yaws) # top bound naturally inclusive
-    
-    # for each ccw_yaw, is at least one cw_yaw between low_ccw and high_ccw?
-    exists_ccw <- logical(length(ccw_yaws))
-    n_cw <- length(cw_yaws)
-    for (j in seq_along(ccw_yaws)) {
-      if (low_ccw[j] <= high_ccw[j]) {
-        exists_ccw[j] <- (idx_high_ccw[j] - idx_low_ccw[j]) > 0
-      } else {
-        exists_ccw[j] <- ((n_cw - idx_low_ccw[j]) + idx_high_ccw[j]) > 0
-      }
-    }
-    ccw_yaws_new <- ccw_yaws[exists_ccw]
-    
-    # same process, now for cw_yaws
-    low_cw  <- ((cw_yaws + min_sep + 180) %% 360) - 180
-    high_cw <- ((cw_yaws + max_sep + 180) %% 360) - 180
-    
-    if (length(ccw_yaws_new) == 0) {
-      cw_yaws_new <- numeric(0)
-    } else {
-      idx_low_cw  <- findInterval(low_cw - 1e-10, ccw_yaws_new) 
-      idx_high_cw <- findInterval(high_cw, ccw_yaws_new)
-      
-      exists_cw <- logical(length(cw_yaws))
-      n_ccwnew <- length(ccw_yaws_new)
-      for (j in seq_along(cw_yaws)) {
-        if (low_cw[j] <= high_cw[j]) {
-          exists_cw[j] <- (idx_high_cw[j] - idx_low_cw[j]) > 0
-        } else {
-          exists_cw[j] <- ((n_ccwnew - idx_low_cw[j]) + idx_high_cw[j]) > 0
-        }
-      }
-      cw_yaws_new <- cw_yaws[exists_cw]
-    }
-    
-    # break iteration if neither side changed
-    if (identical(ccw_yaws_new, ccw_yaws) && identical(cw_yaws_new, cw_yaws)) break
-    
-    # otherwise update and repeat
-    ccw_yaws  <- ccw_yaws_new
-    cw_yaws <- cw_yaws_new
-    
-  }
+  # counterclockwise separation of each ccw yaw from each cw yaw
+  separations <- outer(
+    ccw_yaws,
+    cw_yaws,
+    FUN = function(ccw, cw) (ccw - cw) %% 360
+  )
+  
+  # compatible pairs satisfy the requested separation interval
+  compatible <- separations >= min_sep &
+    separations <= max_sep
+  
+  # retain angles having at least one compatible partner
+  ccw_yaws <- ccw_yaws[rowSums(compatible) > 0]
+  cw_yaws <- cw_yaws[colSums(compatible) > 0]
   
   if(isTRUE(plot)){
     

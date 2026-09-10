@@ -13,11 +13,11 @@ trim.yaws(ccw_yaws, cw_yaws, min_sep, max_sep, plot = FALSE)
 \item{cw_yaws}{Numeric vector: candidate yaw angles known/expected to be \strong{clockwise} of
 \code{ccw_yaws} (degrees, in the interval (-180, 180]).}
 
-\item{min_sep}{Non-negative numeric scalar: the minimum angular separation (degrees) allowed
-between a value in one set and a partner in the other set.}
+\item{min_sep}{Numeric scalar: minimum directional angular separation in degrees, satisfying
+\verb{0 <= min_sep < 360}.}
 
-\item{max_sep}{Non-negative numeric scalar: the maximum angular separation (degrees) allowed
-between a value in one set and a partner in the other set.}
+\item{max_sep}{Numeric scalar: maximum directional angular separation in degrees, satisfying
+\verb{min_sep <= max_sep <= 360}.}
 
 \item{plot}{Logical scalar. \code{TRUE} draws diagnostic plots with retained (blue) and excluded
 (red) angles for each set.}
@@ -35,12 +35,19 @@ partner in the other set, given minimum and maximum directional separation
 constraints.
 }
 \details{
-Given two sets of candidate yaw angles, \code{trim.yaws()} removes elements from each set that
-do not have at least one partner in the other set that is at least \code{min_sep} and up to
-\code{max_sep} clockwise (for \code{ccw_yaws} set) or counterclockwise (for \code{cw_yaws}) from it. In
-other words, each retained \code{ccw_yaws} angle will be \verb{>= min_sep} and \verb{<= max_sep}
-counterclockwise of at least one \code{cw_yaws} angle. Analogously, each retained \code{cw_yaws} angle
-will be \verb{>= min_sep} and \verb{<= max_sep} clockwise of at least one \code{ccw_yaws} angle.
+Given two sets of candidate yaw angles, \code{trim.yaws()} retains angles that
+have at least one compatible partner in the other set. Directional
+separation is measured counterclockwise from \code{cw_yaws} to \code{ccw_yaws}
+and is represented in the interval [0, 360).
+
+For a pair of angles \eqn{c} from \code{ccw_yaws} and \eqn{w} from \code{cw_yaws},
+their directional separation is
+
+\deqn{(c - w) \bmod 360.}
+
+A pair is compatible when this separation is greater than or equal to
+\code{min_sep} and less than or equal to \code{max_sep}. Each returned angle
+therefore has at least one compatible partner in the other returned set.
 }
 \examples{
 # hypothetical candidate yaw sets:
