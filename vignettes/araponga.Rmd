@@ -1,5 +1,5 @@
 ---
-title: "From 2D landmarks to 3D orientantions: the `araponga` workflow"
+title: "From 2D landmarks to 3D orientations: the `araponga` workflow"
 author: "João C. T. Menezes"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
@@ -38,7 +38,7 @@ The general workflow is:
 
 ```
 2D landmarks
-  -> projected 2D pitch
+  -> observed 2D projection
     -> candidate 3D configurations
       -> compatible 3D angles
         -> optional filtering using system-specific information
@@ -110,30 +110,34 @@ y_lb <- -178.5397719
 
 Before estimating gape angle, we need to first estimate the 3D pitch of each mandible, then calculate the difference between them. We'll start with the upper mandible pitch.
 
-### Step 1: projected 2D pitch
+### Step 1: observed 2D projection
 
-The starting point is the apparent pitch visible in the image, which can be extracted with `pitch2d.from.xy()`:
-
-```{r}
-upper_p2d <- pitch2d.from.xy(x_ut, y_ut, x_ub, y_ub, plot = TRUE)
-```
-
-If the bird had been filmed perfectly side-on and at eye level, this 2D projection would already equal the true 3D pitch:
+The starting point is the 2D projection visible in the image, which can be described from the two landmarks with `project2d.from.xy()`:
 
 ```{r}
-cat(upper_p2d)
+upper_2d <- project2d.from.xy(x_ut, y_ut, x_ub, y_ub, plot = TRUE)
+upper_2d
 ```
 
-We can verify this with `find.pitch()` by specifying `candidate_view_elevations = 0` (eye-level) and `candidate_yaws = 0` (pointed straight right). This function necessarily takes some amount of labeling error, which we'll assume to be ± 1 pixel for this exercise.
+The returned `araponga2d` object contains the landmark coordinates, projected 2D pitch (`pitch2d`), and projected length (`length2d`).
+
+If the bird had been filmed perfectly side-on and at eye level, the projected 2D pitch would equal the true 3D pitch:
+
+```{r}
+upper_2d$pitch2d
+```
+
+We can verify this with `find.pitch()` by specifying `candidate_view_elevations = 0` (eye-level) and `candidate_yaws = 0` (pointed straight right). We'll assume ±1 pixel of landmark labeling error for this exercise.
 
 > **Important**
 > The returned angles are not “the true angle”; they are the angles compatible with the observed 2D projection, labeling error, and candidate constraints.
 
 ```{r}
-upper_pitch <- find.pitch(upper_p2d,
-                   candidate_view_elevations = 0,
-                   candidate_yaws = 0,
-                   label_error = 1)
+upper_pitch <- find.pitch(observed2d = upper_2d,
+                          label_error = 1,
+                          candidate_view_elevations = 0,
+                          candidate_yaws = 0)
+
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -147,8 +151,9 @@ But of course that's not real life — at least not for field biologists. Just b
 If we provide no information about viewing geometry, many 3D pitch orientations remain possible:
 
 ```{r}
-upper_pitch <- find.pitch(upper_p2d,
-                   label_error = 1)
+upper_pitch <- find.pitch(upper_2d,
+                          label_error = 1)
+
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -159,10 +164,10 @@ The power of `araponga` comes from adding whatever information you have.
 
 ### Step 3: adding known view elevation
 
-In this case, I measured my filming angle with a laser range finder:
+In this case, I measured my filming angle with a laser range finder, and will assume a ±1° measurement error:
 
 ```{r}
-measured_elevation <- -34.2
+measured_elevation <- seq(-34.2 - 1, -34.2 + 1, 0.1)
 
 plot.angles(measured_elevation,
             type = "view_elevation",
@@ -172,9 +177,10 @@ plot.angles(measured_elevation,
 Including this information narrows the possible pitches:
 
 ```{r}
-upper_pitch <- find.pitch(upper_p2d,
-                   candidate_view_elevations = measured_elevation,
-                   label_error = 1)
+upper_pitch <- find.pitch(upper_2d,
+                          label_error = 1,
+                          candidate_view_elevations = measured_elevation)
+
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -197,10 +203,11 @@ plot.angles(assumed_yaw,
 and include it for pitch estimation:
 
 ```{r}
-upper_pitch <- find.pitch(upper_p2d,
-                   candidate_view_elevations = measured_elevation,
-                   candidate_yaws = assumed_yaw,
-                   label_error = 1)
+upper_pitch <- find.pitch(upper_2d,
+                          label_error = 1,
+                          candidate_yaws = assumed_yaw,
+                          candidate_view_elevations = measured_elevation)
+
 upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
@@ -210,12 +217,12 @@ Now the possible pitch range is much narrower. Importantly, this is not because 
 Let's repeat the process for the lower mandible:
 
 ```{r}
-lower_p2d <- pitch2d.from.xy(x_lt, y_lt, x_lb, y_lb)
+lower_2d <- project2d.from.xy(x_lt, y_lt, x_lb, y_lb)
 
-lower_pitch <- find.pitch(lower_p2d,
-                   candidate_view_elevations = measured_elevation,
-                   candidate_yaws = assumed_yaw,
-                   label_error = 1)
+lower_pitch <- find.pitch(lower_2d,
+                          label_error = 1,
+                          candidate_yaws = assumed_yaw,
+                          candidate_view_elevations = measured_elevation)
 
 lower_pitch
 ```
@@ -241,17 +248,17 @@ Given our assumptions, the possible gape angles range from 21° to 72°.
 This calculation allows any possible upper mandible pitch to combine with any possible lower mandible pitch. If we assume the beak opens in a vertical plane — i.e., if the head is not tilted sideways, a reasonable assumption for singing bellbirds —, we can extract possible gapes on a per-yaw basis. The `paired` argument in `find.pitch()` facilitates that:
 
 ```{r}
-upper_pitch_paired <- find.pitch(upper_p2d,
-           candidate_view_elevations = measured_elevation,
-           candidate_yaws = assumed_yaw,
-           label_error = 1,
-           paired = TRUE)
+upper_pitch_paired <- find.pitch(upper_2d,
+                                 label_error = 1,
+                                 candidate_yaws = assumed_yaw,
+                                 candidate_view_elevations = measured_elevation,
+                                 paired = TRUE)
 
-lower_pitch_paired <- find.pitch(lower_p2d,
-           candidate_view_elevations = measured_elevation,
-           candidate_yaws = assumed_yaw,
-           label_error = 1,
-           paired = TRUE)
+lower_pitch_paired <- find.pitch(lower_2d,
+                                 label_error = 1,
+                                 candidate_yaws = assumed_yaw,
+                                 candidate_view_elevations = measured_elevation,
+                                 paired = TRUE)
 ```
 
 `paired = TRUE` gives us a data frame with the possible pitches for each possible yaw. Let's extract per-yaw possible gapes and pool them:
@@ -282,10 +289,11 @@ We can apply a similar workflow to estimate the yaw at which the bellbird is sin
 To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenient wrapper to the generic `find.3d()`. Let's start by assuming the upper mandible always opens approximately upward:
 
 ```{r}
-upper_yaw <- find.yaw(upper_p2d,
-           candidate_view_elevations = measured_elevation,
-           candidate_pitches = -20:90,
-           label_error = 1)
+upper_yaw <- find.yaw(upper_2d,
+                      label_error = 1,
+                      candidate_pitches = -20:90,
+                      candidate_view_elevations = measured_elevation)
+
 upper_yaw
 plot.angles(upper_yaw, "yaw")
 ```
@@ -293,10 +301,11 @@ plot.angles(upper_yaw, "yaw")
 and the lower mandible approximately downward:
 
 ```{r}
-lower_yaw <- find.yaw(lower_p2d,
-           candidate_view_elevations = measured_elevation,
-           candidate_pitches = -90:20,
-           label_error = 1)
+lower_yaw <- find.yaw(lower_2d,
+                      label_error = 1,
+                      candidate_pitches = -90:20,
+                      candidate_view_elevations = measured_elevation)
+
 lower_yaw
 plot.angles(lower_yaw, "yaw")
 ```
@@ -313,17 +322,17 @@ We can go one step further. Some yaw values may be possible for both mandibles i
 To test this, we can again use `paired = TRUE` to preserve which pitches are possible under each yaw:
 
 ```{r}
-upper_yaw_paired <- find.yaw(upper_p2d,
-           candidate_view_elevations = measured_elevation,
-           candidate_pitches = -20:90,
-           label_error = 1,
-           paired = TRUE)
+upper_yaw_paired <- find.yaw(upper_2d,
+                             label_error = 1,
+                             candidate_pitches = -20:90,
+                             candidate_view_elevations = measured_elevation,
+                             paired = TRUE)
 
-lower_yaw_paired <- find.yaw(lower_p2d,
-           candidate_view_elevations = measured_elevation,
-           candidate_pitches = -90:20,
-           label_error = 1,
-           paired = TRUE)
+lower_yaw_paired <- find.yaw(lower_2d,
+                             label_error = 1,
+                             candidate_pitches = -90:20,
+                             candidate_view_elevations = measured_elevation,
+                             paired = TRUE)
 
 max_gape_per_yaw <- data.frame(yaw = both_yaw,
                                gape = NA)
@@ -368,7 +377,7 @@ The logic is the same throughout `araponga`: start with the projected 2D pitch, 
 
 ## Choosing candidate values
 
-The `candidate_...` arguments are the main way of telling `araponga` what orientations are plausible for your system.
+The `candidate_...` arguments define the 3D configurations that araponga evaluates. They are the main way of expressing prior information or defensible assumptions about the geometry of your system.
 
 There is no universally correct range: the best choice depends on what information you have before estimating the angle of interest.
 
@@ -403,3 +412,69 @@ candidate_pitches = -90:20
 ```
 
 Broader candidate ranges make fewer assumptions but return more uncertainty. Narrower ranges return more precise estimates, but only if the assumptions behind them are justified.
+
+## Using additional 2D information
+
+So far, we have used landmark coordinates and labeling error to constrain projected direction. In some applications, additional information about the length of the object is available.
+
+If the unprojected length of the base-to-tip vector is known or can be bounded, supply it through `full_length`:
+
+```{r, eval = FALSE}
+find.pitch(observed2d = upper_2d,
+           label_error = 1,
+           full_length = c(min_length, max_length),
+           candidate_view_elevations = measured_elevation,
+           candidate_yaws = assumed_yaw
+)
+```
+
+With this route, `araponga` uses projected direction and projected length jointly. This can exclude orientations that produce the correct projected pitch but the wrong amount of foreshortening.
+
+`full_length` does not necessarily have to be a physical measurement. It can also be a reference pixel length obtained from the same object under a known orientation with no foreshortening, provided image scale is unchanged.
+
+When landmark coordinates are available, this landmark-based route is preferable to separately specifying ranges of `pitch2d` and `length2d`, because their joint uncertainty can be retained.
+
+## Supplying projected constraints directly
+
+Landmark coordinates are not required. If projected measurements have already been obtained elsewhere, they can instead be supplied directly.
+
+For example, a range of possible projected pitches can be used with:
+
+```{r, eval = FALSE}
+find.3d(pitch2d = c(20, 25),
+        candidate_pitches = ...,
+        candidate_yaws = ...,
+        candidate_view_elevations = ...)
+```
+
+Projected length can also constrain the search when `full_length` is available:
+
+```{r, eval = FALSE}
+find.3d(length2d = c(60, 65),
+        full_length = c(90, 100),
+        ...)
+```
+
+or both constraints may be supplied:
+
+```{r, eval = FALSE}
+find.3d(pitch2d = c(20, 25),
+        length2d = c(60, 65),
+        full_length = c(90, 100),
+        ...)
+```
+
+These direct routes are useful when landmark coordinates are unavailable or projected measurements have already been derived by another method. When the original landmarks are available, supplying `observed2d` is generally preferable.
+
+## From 3D orientation back to a 2D projection
+
+`project2d.from.3d()` solves the forward version of the same geometric problem: given pitch, yaw, and view elevation, it predicts the projected 2D pitch and relative projected length.
+
+```{r}
+project2d.from.3d(pitch = 30,
+                  yaw = -40,
+                  view_elevation = -20,
+                  plot = TRUE)
+```
+
+If `full_length` is supplied, it also returns projected length and projected *x*–*y* components. This can be useful for simulation, validation, or exploring how viewing geometry affects an object's appearance.

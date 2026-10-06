@@ -25,7 +25,7 @@
 #' Angles are not restricted to a particular interval because rotations are
 #' periodic; any finite value in degrees is accepted.
 #'
-#' In [pitch2d.from.3d()], the same X-axis rotation represented here by
+#' In [project2d.from.3d()], the same X-axis rotation represented here by
 #' `roll` is used to incorporate view elevation. This represents relative
 #' viewing geometry and should not be confused with image-plane camera roll.
 #'

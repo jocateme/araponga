@@ -59,7 +59,7 @@ plot.angles(list)
 # call with output from find.3d
 ## pitches and yaws that project to 10° (± 1° error) if seen from 15° below
 df <- find.3d(
-  9:11,
+  pitch2d = 9:11,
   find = c("pitch", "yaw"),
   candidate_view_elevations = -15
   )

@@ -1,49 +1,65 @@
-#' Calculate projected 2D pitch from two landmarks
+#' Calculate a projected 2D vector from two landmarks
 #'
 #' @description
-#' Compute the 2D pitch angle defined by two landmarks: a tip point and a base point.
+#' Calculate the projected pitch and length of the 2D directed vector defined by a base landmark and a tip
+#' landmark.
 #' 
-#' @param x_tip,x_base Numeric scalars or vectors: image x-coordinate(s) of tip and base of object, with
-#'  x increasing right.
-#' @param y_tip,y_base Numeric scalars or vectors: image y-coordinate(s) of the tip and base of objects,
-#'  with y increasing up.
+#' @param x_tip,x_base Numeric vectors: image *x*-coordinate(s) of tip and base of object, with
+#'  *x* increasing right.
+#' @param y_tip,y_base Numeric vectors: image *y*-coordinate(s) of the tip and base of objects,
+#'  with *y* increasing up.
 #' @param plot Logical scalar. `TRUE` draws a diagnostic plot with base-tip segment and calculated 2D
 #'  pitch angle. Plotting is only supported for single base-tip pair.
 #'
 #' @returns
-#' Numeric vector of 2D pitch angles, in degrees, in the interval (-180°, 180°]. When tip and
-#' base coincide, the direction is undefined and `NA` is returned.
-#'
-#' Scalar outputs also include an `"xy"` attribute containing the input
-#' coordinates, which makes it directly compatible with [find.3d()].
+#' A `data.frame` of class `araponga2d`, with one row per base-tip pair and the following columns:
+#' * `x_tip`, `y_tip`, `x_base`, `y_base`: supplied landmark coordinates.
+#' * `pitch2d`: projected 2D pitch angle(s), in degrees in the interval (-180, 180].
+#' * `length2d`: Euclidean distance(s) between base and tip, in the same units as the supplied coordinates.
+#' 
+#' When tip and base coincide, `length2d` is zero and `pitch2d` is undefined (`NA`).
+#' 
+#' The returned object can be supplied as `observed2d` to [find.3d()] and wrappers.
 #'  
 #' @details
-#' The calculation uses the two-landmark vector
+#' The landmarks define the directed vector
+#' 
 #' \deqn{(dx,dy)=(x_{tip}-x_{base}, y_{tip}-y_{base})}
-#' and returns
-#' \deqn{p_{2} = \operatorname{atan2}(dy, dx).}
+#' 
+#' with projected 2D pitch
+#' 
+#' \deqn{p_{2} = \operatorname{atan2}(dy, dx)}
+#' 
+#' and projected 2D length
+#' 
+#' \deqn{L_2 = \sqrt{dx^2 + dy^2}.}
+#' 
+#' `length2d` is expressed in the same units as the landmark coordinates. For image coordinates in pixels,
+#' for example, `length2d` is returned in pixels.
+#' 
+#' Coordinate arguments may have length 1 or a common length greater than 1. Length-1 arguments are recycled.
 #'
 #' @examples
 #' # scalar examples (plots)
-#' pitch2d.from.xy(1, 0, 0, 0, plot = TRUE) # pointed right -> 0°
-#' pitch2d.from.xy(-1, 0, 0, 0, plot = TRUE) # pointed left -> 180°
-#' pitch2d.from.xy(0, 1, 0, 0, plot = TRUE) # pointed up -> 90°
-#' pitch2d.from.xy(0, -1, 0, 0, plot = TRUE) # pointed down -> -90°
+#' project2d.from.xy(1, 0, 0, 0, plot = TRUE) # pointed right -> 0°
+#' project2d.from.xy(-1, 0, 0, 0, plot = TRUE) # pointed left -> 180°
+#' project2d.from.xy(0, 1, 0, 0, plot = TRUE) # pointed up -> 90°
+#' project2d.from.xy(0, -1, 0, 0, plot = TRUE) # pointed down -> -90°
 #'
 #' # vectorised usage (no plot)
 #' x_tips  <- c(1, 0, -1)
 #' y_tips  <- c(0, 1, 0)
 #' x_bases <- c(0, 0, 0)
 #' y_bases <- c(0, 0, 0)
-#' pitch2d.from.xy(x_tips, y_tips, x_bases, y_bases)
+#' project2d.from.xy(x_tips, y_tips, x_bases, y_bases)
 #' 
-#' @seealso [pitch2d.w.error()], [pitch2d.from.3d()]
+#' @seealso [pitch2d.w.error()], [project2d.from.3d()]
 #' @export
-pitch2d.from.xy <- function(x_tip,
-                            y_tip,
-                            x_base,
-                            y_base,
-                            plot = FALSE){
+project2d.from.xy <- function(x_tip,
+                              y_tip,
+                              x_base,
+                              y_base,
+                              plot = FALSE){
   
   ## ---- input validation ----
   if (missing(x_tip) || missing(y_tip) || missing(x_base) || missing(y_base)) {
@@ -90,16 +106,13 @@ pitch2d.from.xy <- function(x_tip,
     plot <- FALSE
   }
   
-  ## compute 2D pitch
+  ## compute 2D pitch and length
   dx <- x_tip - x_base
   dy <- y_tip - y_base
   
-  pitch2d <- rad2deg(atan2(dy, dx))
-  
-  # zero-length projection = degenerate
-  proj_length_sq <- dx^2 + dy^2
-  degenerate <- proj_length_sq <= .Machine$double.eps
-  pitch2d[degenerate] <- NA
+  project2d <- .project2d.from.components(dx, dy)
+  pitch2d <- project2d$pitch2d
+  length2d <- project2d$length2d
   
   ## plot (scalar only)
   if(plot){
@@ -114,10 +127,8 @@ pitch2d.from.xy <- function(x_tip,
                    xlim = xlim,
                    ylim = ylim,
                    asp = 1)
-    graphics::lines(x = c(x_base, max(xlim)),
-                    y = c(y_base, y_base),
-                    lty = 2)
     graphics::abline(h = y_base,
+                     col = "gray",
                      lty = 2)
     
     if(!is.na(pitch2d)){
@@ -143,18 +154,43 @@ pitch2d.from.xy <- function(x_tip,
                      col = "darkblue")
     }
     
+    graphics::text(x = mean(c(x_base, x_tip)),
+                   y =  mean(c(y_base, y_tip)),
+                   labels = round(length2d, 2),
+                   col = "black")
+    
     graphics::points(x = c(x_base, x_tip),
                      y = c(y_base, y_tip),
                      col = c("darkgreen", "darkred"),
                      pch = 16)
   }
   
-  if(n == 1){
-    attr(pitch2d, "xy") <- list(x_tip = x_tip,
-                                y_tip = y_tip,
-                                x_base = x_base,
-                                y_base = y_base)
-  }
+  total2d <- data.frame(x_tip = x_tip,
+                        y_tip = y_tip,
+                        x_base = x_base,
+                        y_base = y_base,
+                        pitch2d = pitch2d,
+                        length2d = length2d)
   
-  return(pitch2d)
+  class(total2d) <- c("araponga2d", "data.frame")
+  
+  return(total2d)
+  
+}
+
+.project2d.from.components <- function(dx, dy) {
+  
+  length2d_sq <- dx^2 + dy^2
+  
+  degenerate <- length2d_sq == 0
+  
+  pitch2d <- rad2deg(atan2(dy, dx))
+  pitch2d[degenerate] <- NA
+  pitch2d[pitch2d <= -180] <- 180 # floating point (< -180), package convention (== -180)
+  
+  length2d <- sqrt(length2d_sq)
+  
+  return(data.frame(pitch2d = pitch2d,
+                    length2d = length2d))
+  
 }

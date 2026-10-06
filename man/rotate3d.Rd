@@ -44,7 +44,7 @@ occur in the order pitch, then yaw, then roll.
 Angles are not restricted to a particular interval because rotations are
 periodic; any finite value in degrees is accepted.
 
-In \code{\link[=pitch2d.from.3d]{pitch2d.from.3d()}}, the same X-axis rotation represented here by
+In \code{\link[=project2d.from.3d]{project2d.from.3d()}}, the same X-axis rotation represented here by
 \code{roll} is used to incorporate view elevation. This represents relative
 viewing geometry and should not be confused with image-plane camera roll.
 }

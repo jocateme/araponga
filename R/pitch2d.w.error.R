@@ -1,81 +1,126 @@
-#' Simulate error in 2D pitch calculation from labeling error
+#' Calculate 2D pitch uncertainty from landmark labeling uncertainty
 #'
-#' `pitch2d.w.error()` simulates the effect of landmark-labeling uncertainty on a 2D pitch
-#' value returned by [pitch2d.from.xy()].
+#' @description
+#' Calculate the range of projected 2D pitch angles compatible with uncertainty in the locations of two
+#' landmarks.
 #'
-#' @param pitch2d Numeric scalar returned by [pitch2d.from.xy()].
-#' @param label_error Positive numeric scalar specifying the error used to perturb each landmark
-#'  coordinate, in the same units as the coordinates supplied to [pitch2d.from.xy()] (e.g., pixels).
-#' @param label_nsamp Positive integer scalar specifying the approximate number of grid combinations to
-#'  evaluate. Default 625 uses a 5-point grid for each of the four coordinates, for 5^4 = 625 total
-#'  combinations.
-#' @param add_boundaries Logical scalar (default `FALSE`). If `TRUE`, boundary angles `0`, `90`, `-90`,
-#'  and `180` are added when the simulated set spans them. This is useful when working with the returned
-#'  angles individually, since these boundary values can behave differently from interior values.
+#' @param observed2d One-row `data.frame` of class `araponga2d`, as returned by [project2d.from.xy()].
+#' @param label_error Non-negative numeric scalar specifying the maximum labeling error in each landmark
+#'  coordinate, in the same units as the coordinates in `observed2d` (e.g., pixels).
 #'  
-#' @returns Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval `(-180, 180]`.
+#' @details
+#' `label_error` is applied independently to each landmark coordinate. The function returns the smallest
+#' continuous interval of projected 2D pitch angles compatible with that uncertainty.
+#'
+#' If the uncertainty is large enough that all projected directions are possible, the returned interval
+#' spans the full circle.
+#'  
+#' @returns
+#' A named list describing the smallest continuous angular interval compatible with the specified labeling
+#' error, with components:
+#' * `from`: Starting angle of the interval, in degrees.
+#' * `to`: Ending angle of the interval, in degrees.
+#' * `width`: Width of the interval, in degrees.
+#' * `wrap`: Logical indicating whether the interval crosses the `180`/`-180` boundary.
+#' * `all`: An empty list, included for consistency with [summarize.yaws()].
+#' 
+#' If the landmark error region contains the origin in its interior, all 2D pitch angles are possible and
+#' the returned interval has `from = -180`, `to = 180`, and `width = 360`.
 #' 
 #' @examples
-#' 
-#' # A pitch value computed from landmark coordinates
-#' p2d <- pitch2d.from.xy(x_tip  = 100, y_tip  = 80, x_base = 110, y_base = 120)
+#' # Projected vector from hypothetical pixel coordinates
+#' observed <- project2d.from.xy(
+#'   x_tip = 10, y_tip = 8,
+#'   x_base = 11, y_base = 12
+#' )
 #'
-#' # Simulate the effect of ±1 pixel labeling uncertainty
-#' pitch2d.w.error(p2d, label_error = 1)
-#' 
-#' # Simulate the effect of ±5 pixel labeling uncertainty
-#' pitch2d.w.error(p2d, label_error = 5)
-#' 
-#' @seealso [pitch2d.from.xy()]
+#' # Pitch interval compatible with ±1 pixel labeling uncertainty
+#' pitch2d.w.error(observed, label_error = 1)
+#'
+#' # Pitch interval compatible with ±5 pixel labeling uncertainty (full circle returned)
+#' pitch2d.w.error(observed, label_error = 5)
+#'
+#' @seealso [project2d.from.xy()], [summarize.yaws()]
 #' @export
-pitch2d.w.error <- function(pitch2d,
-                            label_error,
-                            label_nsamp = 625,
-                            add_boundaries = FALSE){
+pitch2d.w.error <- function(observed2d,
+                            label_error){
   
-  if (!is.numeric(pitch2d) || length(pitch2d) != 1 || !is.finite(pitch2d)) {
-    stop("`pitch2d` must be a finite numeric scalar.", call. = FALSE)
+  ## --- observed2d ---
+  if (missing(observed2d) || !inherits(observed2d, "araponga2d")) {
+    stop(
+      "`observed2d` must be an `araponga2d` object returned by `project2d.from.xy()`.",
+      call. = FALSE
+    )
   }
   
-  xy <- attributes(pitch2d)$xy
-  if (is.null(xy) ||
-      !is.list(xy) ||
-      !all(c("x_tip", "y_tip", "x_base", "y_base") %in% names(xy)) ||
-      any(!vapply(xy[c("x_tip", "y_tip", "x_base", "y_base")], is.numeric, logical(1)))) {
-    stop("`pitch2d` must carry a valid `xy` attribute as returned by `pitch2d.from.xy()`.", call. = FALSE)
+  if (nrow(observed2d) != 1) {
+    stop(
+      "`observed2d` must contain exactly one observation.",
+      call. = FALSE
+    )
   }
   
-  if (!is.numeric(label_error) || length(label_error) != 1 || !is.finite(label_error) || label_error <= 0) {
-    stop("`label_error` must be a positive numeric scalar.", call. = FALSE)
+  required <- c("x_tip", "y_tip", "x_base", "y_base")
+  
+  if (!all(required %in% names(observed2d))) {
+    stop(
+      "`observed2d` must contain `x_tip`, `y_tip`, `x_base`, and `y_base`.",
+      call. = FALSE
+    )
   }
   
-  if (!is.numeric(label_nsamp) || length(label_nsamp) != 1 || !is.finite(label_nsamp) ||
-      label_nsamp < 1 || abs(label_nsamp - round(label_nsamp)) > 1e-8) {
-    stop("`label_nsamp` must be a positive integer scalar.", call. = FALSE)
+  valid_coordinates <- vapply(
+    observed2d[required],
+    function(x) is.numeric(x) && length(x) == 1 && is.finite(x),
+    logical(1)
+  )
+  
+  if (!all(valid_coordinates)) {
+    stop(
+      "Landmark coordinates in `observed2d` must be finite numeric values.",
+      call. = FALSE
+    )
   }
   
-  if (!is.logical(add_boundaries) || length(add_boundaries) != 1 || is.na(add_boundaries)) {
-    stop("`add_boundaries` must be a logical scalar.", call. = FALSE)
+  ## --- label_error ---
+  if (!is.numeric(label_error) ||
+      length(label_error) != 1 ||
+      !is.finite(label_error) ||
+      label_error < 0) {
+    stop(
+      "`label_error` must be a positive finite numeric scalar.",
+      call. = FALSE
+    )
   }
   
-  label_nsamp <- as.integer(round(label_nsamp))
+  dx0 <- observed2d$x_tip - observed2d$x_base
+  dy0 <- observed2d$y_tip - observed2d$y_base
   
-  xy <- attributes(pitch2d)$xy
-  x_tip <- xy$x_tip
-  y_tip <- xy$y_tip
-  x_base <- xy$x_base
-  y_base <- xy$y_base
+  dx_lim <- dx0 + c(-2, 2) * label_error
+  dy_lim <- dy0 + c(-2, 2) * label_error
   
-  n <- ceiling(label_nsamp^(1/4))
-  t_x <- seq(x_tip - label_error, x_tip + label_error, length.out = n)
-  t_y <- seq(y_tip - label_error, y_tip + label_error, length.out = n)
-  b_x <- seq(x_base - label_error, x_base + label_error, length.out = n)
-  b_y <- seq(y_base - label_error, y_base + label_error, length.out = n)
+  # full circle case
+  origin_inside <-
+    dx_lim[1] < 0 && dx_lim[2] > 0 &&
+    dy_lim[1] < 0 && dy_lim[2] > 0
   
-  pitch2d.all <- sort(unique(pitch2d.from.xy(rep(t_x, each = n^3),
-                                             rep(t_y, each = n^2, times = n),
-                                             rep(b_x, each = n, times = n^2),
-                                             rep(b_y, times = n^3))))
+  if(origin_inside){
+    return(list(
+      from = -180,
+      to = 180,
+      width = 360,
+      wrap = FALSE,
+      all = list())
+    )
+  }
+  
+  # corners of the rectangle
+  corners <- expand.grid(
+    dx = dx_lim,
+    dy = dy_lim
+  )
+  
+  pitch2d.all <- .project2d.from.components(corners$dx, corners$dy)$pitch2d
   
   pitch2d.all <- pitch2d.all[!is.na(pitch2d.all)]
   if (length(pitch2d.all) == 0) {
@@ -84,51 +129,7 @@ pitch2d.w.error <- function(pitch2d,
       call. = FALSE
     )
   }
-  
-  if(add_boundaries){
-    
-    p2d.summ <- summarize.yaws(pitch2d.all)
-    
-    # do they cross -180/180?
-    if(p2d.summ$wrap){
-      pitch2d.all <- c(pitch2d.all,
-                       180)
-      # do they cross 90?
-      if(p2d.summ$from < 90 | p2d.summ$to > 90){
-        pitch2d.all <- c(pitch2d.all,
-                         90)
-      }
-      # do they cross -90?
-      if(p2d.summ$from < -90 | p2d.summ$to > -90){
-        pitch2d.all <- c(pitch2d.all,
-                         -90)
-      }
-      # do they cross 0?
-      if(p2d.summ$from < 0 | p2d.summ$to > 0){
-        pitch2d.all <- c(pitch2d.all,
-                         0)
-      }
-    } else {
-      # do they cross 90?
-      if(p2d.summ$from < 90 & p2d.summ$to > 90){
-        pitch2d.all <- c(pitch2d.all,
-                         90)
-      }
-      # do they cross -90?
-      if(p2d.summ$from < -90 & p2d.summ$to > -90){
-        pitch2d.all <- c(pitch2d.all,
-                         -90)
-      }
-      # do they cross 0?
-      if(p2d.summ$from < 0 & p2d.summ$to > 0){
-        pitch2d.all <- c(pitch2d.all,
-                         0)
-      }
-    }
-    
-  }
-  
-  return(sort(unique(pitch2d.all)))
+
+  summarize.yaws(pitch2d.all, tie_action = "error")
   
 }
-

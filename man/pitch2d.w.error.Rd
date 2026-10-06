@@ -2,48 +2,55 @@
 % Please edit documentation in R/pitch2d.w.error.R
 \name{pitch2d.w.error}
 \alias{pitch2d.w.error}
-\title{Simulate error in 2D pitch calculation from labeling error}
+\title{Calculate 2D pitch uncertainty from landmark labeling uncertainty}
 \usage{
-pitch2d.w.error(
-  pitch2d,
-  label_error,
-  label_nsamp = 625,
-  add_boundaries = FALSE
-)
+pitch2d.w.error(observed2d, label_error)
 }
 \arguments{
-\item{pitch2d}{Numeric scalar returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.}
+\item{observed2d}{One-row \code{data.frame} of class \code{araponga2d}, as returned by \code{\link[=project2d.from.xy]{project2d.from.xy()}}.}
 
-\item{label_error}{Positive numeric scalar specifying the error used to perturb each landmark
-coordinate, in the same units as the coordinates supplied to \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}} (e.g., pixels).}
-
-\item{label_nsamp}{Positive integer scalar specifying the approximate number of grid combinations to
-evaluate. Default 625 uses a 5-point grid for each of the four coordinates, for 5^4 = 625 total
-combinations.}
-
-\item{add_boundaries}{Logical scalar (default \code{FALSE}). If \code{TRUE}, boundary angles \code{0}, \code{90}, \code{-90},
-and \code{180} are added when the simulated set spans them. This is useful when working with the returned
-angles individually, since these boundary values can behave differently from interior values.}
+\item{label_error}{Non-negative numeric scalar specifying the maximum labeling error in each landmark
+coordinate, in the same units as the coordinates in \code{observed2d} (e.g., pixels).}
 }
 \value{
-Numeric vector of unique simulated 2D pitch angles, in degrees, in the interval \verb{(-180, 180]}.
+A named list describing the smallest continuous angular interval compatible with the specified labeling
+error, with components:
+\itemize{
+\item \code{from}: Starting angle of the interval, in degrees.
+\item \code{to}: Ending angle of the interval, in degrees.
+\item \code{width}: Width of the interval, in degrees.
+\item \code{wrap}: Logical indicating whether the interval crosses the \code{180}/\code{-180} boundary.
+\item \code{all}: An empty list, included for consistency with \code{\link[=summarize.yaws]{summarize.yaws()}}.
+}
+
+If the landmark error region contains the origin in its interior, all 2D pitch angles are possible and
+the returned interval has \code{from = -180}, \code{to = 180}, and \code{width = 360}.
 }
 \description{
-\code{pitch2d.w.error()} simulates the effect of landmark-labeling uncertainty on a 2D pitch
-value returned by \code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}.
+Calculate the range of projected 2D pitch angles compatible with uncertainty in the locations of two
+landmarks.
+}
+\details{
+\code{label_error} is applied independently to each landmark coordinate. The function returns the smallest
+continuous interval of projected 2D pitch angles compatible with that uncertainty.
+
+If the uncertainty is large enough that all projected directions are possible, the returned interval
+spans the full circle.
 }
 \examples{
+# Projected vector from hypothetical pixel coordinates
+observed <- project2d.from.xy(
+  x_tip = 10, y_tip = 8,
+  x_base = 11, y_base = 12
+)
 
-# A pitch value computed from landmark coordinates
-p2d <- pitch2d.from.xy(x_tip  = 100, y_tip  = 80, x_base = 110, y_base = 120)
+# Pitch interval compatible with ±1 pixel labeling uncertainty
+pitch2d.w.error(observed, label_error = 1)
 
-# Simulate the effect of ±1 pixel labeling uncertainty
-pitch2d.w.error(p2d, label_error = 1)
-
-# Simulate the effect of ±5 pixel labeling uncertainty
-pitch2d.w.error(p2d, label_error = 5)
+# Pitch interval compatible with ±5 pixel labeling uncertainty (full circle returned)
+pitch2d.w.error(observed, label_error = 5)
 
 }
 \seealso{
-\code{\link[=pitch2d.from.xy]{pitch2d.from.xy()}}
+\code{\link[=project2d.from.xy]{project2d.from.xy()}}, \code{\link[=summarize.yaws]{summarize.yaws()}}
 }
