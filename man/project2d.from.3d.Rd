@@ -64,7 +64,7 @@ These are returned as \code{dx_factor} and \code{dy_factor}, respectively. Proje
 
 and projection factor is
 
-\deqn{q = \sqrt{dx^2 + dy^2}.}
+\deqn{q = \sqrt{f_x^2 + f_y^2}.}
 
 If \code{full_length} \eqn{L} is supplied, the projected components are
 

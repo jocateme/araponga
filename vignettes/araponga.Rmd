@@ -280,7 +280,7 @@ per_yaw_gapes <- sort(unique(per_yaw_gapes))
 per_yaw_gapes
 ```
 
-Gape is now estimated between `r min(per_yaw_gapes)`° and `r max(per_yaw_gape)`°.
+Gape is now estimated between `r min(per_yaw_gapes)`° and `r max(per_yaw_gapes)`°.
 
 ## What if I'm interested in yaw?
 
