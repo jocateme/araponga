@@ -88,7 +88,7 @@ pitch2d.w.error <- function(observed2d,
       !is.finite(label_error) ||
       label_error < 0) {
     stop(
-      "`label_error` must be a positive finite numeric scalar.",
+      "`label_error` must be a non-negative finite numeric scalar.",
       call. = FALSE
     )
   }

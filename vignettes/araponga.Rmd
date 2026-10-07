@@ -28,7 +28,7 @@ library(araponga)
 
 ## Overview
 
-`araponga` estimates possible 3D orientations of objects from 2D landmarks in images or videos.
+`araponga` estimates possible 3D orientations of directed objects from pairs of landmarks labeled in 2D images or video frames.
 
 The central challenge is that a 2D projection does not uniquely determine a 3D angle: the same apparent orientation in an image can be produced by many combinations of true orientation, camera position, and viewing angle. Instead of returning a single potentially misleading estimate, `araponga` returns the set of 3D angles consistent with the available information.
 
@@ -38,7 +38,7 @@ The general workflow is:
 
 ```
 2D landmarks
-  -> observed 2D projection
+  -> projected 2D geometry
     -> candidate 3D configurations
       -> compatible 3D angles
         -> optional filtering using system-specific information
@@ -142,7 +142,7 @@ upper_pitch
 plot.angles(upper_pitch, "pitch")
 ```
 
-Assuming ±1 pixel of labeling uncertainty, the upper mandible pitch would be between 21° and 24°.
+Assuming ±1 pixel of labeling uncertainty, the upper mandible pitch would be between `r min(upper_pitch)`° and `r max(upper_pitch)`°.
 
 ### Step 2: dealing with real camera angles
 
@@ -243,7 +243,7 @@ gapes <- sort(unique(as.vector(outer(upper_pitch, lower_pitch, "-"))))
 gapes
 ```
 
-Given our assumptions, the possible gape angles range from 21° to 72°.
+Given our assumptions, the possible gape angles range from `r min(gapes)`° to `r max(gapes)`°.
 
 This calculation allows any possible upper mandible pitch to combine with any possible lower mandible pitch. If we assume the beak opens in a vertical plane — i.e., if the head is not tilted sideways, a reasonable assumption for singing bellbirds —, we can extract possible gapes on a per-yaw basis. The `paired` argument in `find.pitch()` facilitates that:
 
@@ -280,7 +280,7 @@ per_yaw_gapes <- sort(unique(per_yaw_gapes))
 per_yaw_gapes
 ```
 
-Gape is now estimated between 33° and 63°.
+Gape is now estimated between `r min(per_yaw_gapes)`° and `r max(per_yaw_gape)`°.
 
 ## What if I'm interested in yaw?
 
@@ -373,7 +373,7 @@ yaw <- trimmed$trimmed_ccw_yaws
 next_frame_yaw <- trimmed$trimmed_cw_yaws
 ```
 
-The logic is the same throughout `araponga`: start with the projected 2D pitch, then use available information to determine which 3D configurations are compatible with it.
+The logic is the same throughout `araponga`: describe what is known about the object's 2D projection, then use additional geometric or system-specific information to determine which 3D configurations are compatible with those observations.
 
 ## Choosing candidate values
 
@@ -413,9 +413,9 @@ candidate_pitches = -90:20
 
 Broader candidate ranges make fewer assumptions but return more uncertainty. Narrower ranges return more precise estimates, but only if the assumptions behind them are justified.
 
-## Using additional 2D information
+## Using object length to constrain orientation
 
-So far, we have used landmark coordinates and labeling error to constrain projected direction. In some applications, additional information about the length of the object is available.
+So far, we have used landmark coordinates and labeling error to constrain projected direction. In some applications, information about the object's length can provide an additional constraint.
 
 If the unprojected length of the base-to-tip vector is known or can be bounded, supply it through `full_length`:
 
@@ -424,19 +424,63 @@ find.pitch(observed2d = upper_2d,
            label_error = 1,
            full_length = c(min_length, max_length),
            candidate_view_elevations = measured_elevation,
-           candidate_yaws = assumed_yaw
-)
+           candidate_yaws = assumed_yaw)
 ```
 
 With this route, `araponga` uses projected direction and projected length jointly. This can exclude orientations that produce the correct projected pitch but the wrong amount of foreshortening.
 
-`full_length` does not necessarily have to be a physical measurement. It can also be a reference pixel length obtained from the same object under a known orientation with no foreshortening, provided image scale is unchanged.
+An important point is that `full_length` must use the same units as the 2D coordinates. If landmarks were labeled in pixels, for example, `full_length` must represent the length the object would occupy in pixels if it were not foreshortened. A physical object length in millimeters cannot therefore be supplied directly as `full_length`.
 
-When landmark coordinates are available, this landmark-based route is preferable to separately specifying ranges of `pitch2d` and `length2d`, because their joint uncertainty can be retained.
+### Estimating `full_length`
+
+`araponga` provides two helper functions for converting physical measurements into an appropriate unprojected image length.
+
+If the physical length of the object, its distance from the camera, and the camera geometry are known, use `full_length.from.camera()`. Camera geometry can be supplied either as focal length and sensor width:
+
+```{r, eval = FALSE}
+full_length <- full_length.from.camera(
+  length_physical = c(28, 31),
+  distance = c(2900, 3100),
+  image_width = 1920,
+  focal_length = 6.1,
+  sensor_width = 6.2
+)
+```
+
+or as horizontal field of view:
+
+```{r, eval = FALSE}
+full_length <- full_length.from.camera(
+  length_physical = c(28, 31),
+  distance = c(2900, 3100),
+  image_width = 1920,
+  field_of_view = c(50, 52)
+)
+```
+
+`length_physical` and `distance` must use the same physical units; likewise, `focal_length` and `sensor_width` must use the same units. The returned `full_length` is in pixels.
+
+Alternatively, if a reference segment of known physical length is visible at approximately the same camera distance as the target object, use `full_length.from.reference()`:
+
+```{r, eval = FALSE}
+full_length <- full_length.from.reference(
+  length_physical = c(28, 31),
+  reference_physical = 20,
+  reference_px = c(80, 84)
+)
+```
+
+The reference segment should be approximately perpendicular to the camera's viewing axis so that its observed pixel length is not substantially foreshortened.
+
+Both helper functions accept ranges, allowing uncertainty in physical measurements, distance, camera parameters, or reference measurements to propagate into the resulting range of possible `full_length` values.
+
+A reference pixel length measured from the same object under a known orientation with no foreshortening can also be supplied directly as `full_length`, provided image scale is unchanged.
+
+When landmark coordinates are available, combining `observed2d`, `label_error`, and `full_length` is preferable to separately supplying ranges of `pitch2d` and `length2d`, because the joint uncertainty in projected direction and length can then be retained.
 
 ## Supplying projected constraints directly
 
-Landmark coordinates are not required. If projected measurements have already been obtained elsewhere, they can instead be supplied directly.
+The standard `araponga` workflow starts from two 2D landmarks. However, if projected measurements have already been obtained elsewhere, `pitch2d` and/or `length2d` can instead be supplied directly to `find.3d()` and its wrappers.
 
 For example, a range of possible projected pitches can be used with:
 
@@ -464,7 +508,7 @@ find.3d(pitch2d = c(20, 25),
         ...)
 ```
 
-These direct routes are useful when landmark coordinates are unavailable or projected measurements have already been derived by another method. When the original landmarks are available, supplying `observed2d` is generally preferable.
+These direct routes are useful when landmark coordinates are unavailable or projected measurements have already been derived by another method. When the original landmarks are available, supplying `observed2d` is generally preferable because `araponga` can preserve the relationship between projected direction and length under landmark-labeling uncertainty.
 
 ## From 3D orientation back to a 2D projection
 

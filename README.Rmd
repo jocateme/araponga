@@ -19,11 +19,9 @@ knitr::opts_chunk$set(
 
 # `araponga`: estimating 3D orientations from 2D landmarks in R
 
-`araponga` is for you if you need to estimate the 3D orientations (left—right, up—down) of a directed object from single images. It identifies the orientations compatible with the object's observed 2D projection and any additional information you can provide about the imaging geometry or object, such as view elevation or unprojected length.
+`araponga` is for you if you need to estimate the 3D orientations (left—right, up—down) of a directed object from two landmarks labeled in single images or video frames. It identifies the orientations compatible with the observed 2D landmark geometry and any additional information you can provide about the imaging geometry or object, such as view elevation or unprojected length.
 
-The central problem is that a 2D projection does not uniquely determine a 3D angle: the same apparent orientation in an image can be produced by many combinations of true orientation, camera position, and viewing angle. Instead of returning a single potentially misleading estimate, `araponga` returns the set of 3D angles compatible with the observed 2D projection and any user-provided constraints.
-
-The package was originally developed to estimate beak gape angles in singing birds, but the workflow is general: if an object can be represented by a base landmark and a tip landmark, `araponga` can help explore which 3D pitch, yaw, and view elevation angles are compatible with its 2D projection.
+The central problem is that a pair of 2D landmarks does not uniquely determine a 3D angle: the same apparent orientation in an image can be produced by many combinations of true orientation, camera position, and viewing angle. Instead of returning a single potentially misleading estimate, `araponga` returns the set of 3D angles compatible with the observed landmarks and user-provided constraints.
 
 ## Installation
 
@@ -52,7 +50,7 @@ The development version may include changes that have not yet been released on C
 
 The general workflow is:
 
-`2D landmarks -> observed 2D projection -> constrained 3D search -> compatible 3D angles`
+`2D landmarks -> projected geometry -> constrained 3D search -> compatible 3D angles`
 
 The package uses fixed angle conventions for pitch, yaw, and view elevation. To display these conventions at any time, use:
 
@@ -104,9 +102,9 @@ plot.angles(possible_yaws, type = "yaw")
 
 An important point is that the `candidate_...` arguments define which 3D configurations are considered plausible before compatible angles are returned.
 
-If the unprojected length of the object is also known or can be estimated, it can be supplied with `full_length`. In that case, araponga uses both projected direction and projected length to constrain the compatible 3D orientations:
+If the unprojected length of the object is also known or can be estimated, it can be supplied with `full_length`. In that case, `araponga` uses both projected direction and projected length to constrain the compatible 3D orientations:
 
-```
+```r
 possible_pitches <- find.pitch(
   observed2d = observed,
   label_error = 1,
@@ -116,7 +114,11 @@ possible_pitches <- find.pitch(
 )
 ```
 
-When landmark coordinates are unavailable, `find.3d()` and its wrappers can alternatively accept projected `pitch2d` and/or `length2d` constraints directly. See the vignette and function documentation for these alternative input routes.
+`full_length` must be expressed in the same units as the observed 2D coordinates. Thus, when landmarks are measured in pixels, `full_length` must represent the object's unprojected length in pixels rather than its physical length directly.
+
+Two helper functions can be used to estimate this quantity. `full_length.from.camera()` converts physical length to an unprojected image length using camera distance and camera geometry, while `full_length.from.reference()` estimates it from a reference segment of known physical length and pixel length.
+
+For workflows in which projected measurements have already been calculated, `find.3d()` and its wrappers can also accept `pitch2d` and/or `length2d` constraints directly, without requiring the original landmarks. See the vignette and function documentation for this alternative input route.
 
 ## Main functions
 
@@ -125,6 +127,9 @@ When landmark coordinates are unavailable, `find.3d()` and its wrappers can alte
 * describing observed 2D projections and uncertainty:
   * `project2d.from.xy()`
   * `pitch2d.w.error()`
+* estimating unprojected image length:
+  * `full_length.from.camera()`
+  * `full_length.from.reference()`
 * finding compatible 3D angles:
   * `find.3d()`
   * `find.pitch()`
