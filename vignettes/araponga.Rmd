@@ -14,7 +14,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -28,11 +28,9 @@ library(araponga)
 
 ## Overview
 
-`araponga` estimates possible 3D orientations of directed objects from pairs of landmarks labeled in 2D images or video frames.
+`araponga` estimates possible three-dimensional (3D) orientations of directed objects from landmarks labeled in two-dimensional (2D) images or video frames.
 
-The central challenge is that a 2D projection does not uniquely determine a 3D angle: the same apparent orientation in an image can be produced by many combinations of true orientation, camera position, and viewing angle. Instead of returning a single potentially misleading estimate, `araponga` returns the set of 3D angles consistent with the available information.
-
-This vignette introduces the main `araponga` workflow using a real example: estimating how widely bare-throated bellbirds — "araponga", in Brazil — open their beaks while producing some of the loudest sounds recorded among birds.
+A 2D projection generally does not uniquely determine a 3D orientation: many combinations of object orientation and camera position can produce the same image. Rather than selecting a single orientation without sufficient information, `araponga` identifies the configurations compatible with the observed projection and the constraints supplied by the user.
 
 The general workflow is:
 
@@ -40,269 +38,275 @@ The general workflow is:
 2D landmarks
   -> projected 2D geometry
     -> candidate 3D configurations
-      -> compatible 3D angles
-        -> optional filtering using system-specific information
+      -> compatible 3D orientations
+        -> optional application-specific constraints or calculations
 ```
+
+This vignette demonstrates that workflow using video of a singing bare-throated bellbird (*Procnias nudicollis*), known as an "araponga" in Brazil. The biological motivation is to estimate beak opening, but the functions demonstrated here estimate the **orientation of directed vectors**. Defining anatomically meaningful vectors and calculating a biological quantity such as gape are separate, application-specific steps.
 
 Before getting to the case study, let's define a few angle conventions used throughout the package.
 
 ## Angle conventions
 
-We call **pitch** the up–down orientation of an object. Pitch varies from -90° (pointed straight down), through 0° (horizontal), to 90° (pointed straight up). For example, this is a pitch of 45°:
+**Pitch** is the up–down orientation of a directed vector relative to the horizontal plane. In its conventional range, -90° points straight down, 0° is horizontal, and 90° points straight up. For example, this is a pitch of 45°:
 
 ```{r}
 plot.angles(45, type = "pitch")
 ```
 
-We call **yaw** the left–right orientation of an object. Yaw varies over the interval (-180°, 180°]: -90° means pointed toward the camera, 0° means pointed right, 90° means pointed away from the camera, and 180° means pointed left. For example, this is a yaw of -80°:
+**Yaw** is the direction of the vector in the horizontal plane. Under the package conventions, -90° points toward the camera, 0° points right, 90° points away, and 180° points left. For example, this is a yaw of -80°:
 
 ```{r}
 plot.angles(-80, type = "yaw")
 ```
 
-Finally, **view elevation** is the vertical angle of the camera relative to the object. It varies from -90° (viewed from directly below), through 0° (eye level), to 90° (viewed from directly above). For example:
+**View elevation** is the vertical angle of the camera relative to the object: -90° means viewed from directly below, 0° is eye level, and 90° means viewed from directly above. For example:
 
 ```{r}
 plot.angles(-15, type = "view_elevation")
 ```
 
-You can remind yourself of the package conventions at any time with `conventions()`.
+You can display these conventions at any time with `conventions()`.
 
-With that clarified, let's move on to the case study, and the reason why the package was originally developed.
+## Case study: beak gape angle in bellbirds
 
-## Case study: estimating beak gape angle in bellbirds
+During my PhD, I investigated how widely bare-throated bellbirds open their beaks when singing, and whether extreme gape helps them produce exceptionally high-amplitude vocalizations.
 
-During my PhD, I wanted to find out how widely bare-throated bellbirds open their beaks, and whether extreme gape helps them produce some of the loudest vocalizations among terrestrial animals.
+I recorded singing males in the Atlantic Forest of Brazil. The frame below shows a male at his display perch in the [Legado das Águas Reserve](https://www.legadodasaguas.com.br).
 
-To answer this, I recorded videos of singing male bellbirds in the Atlantic Forest of Brazil. Here is one video frame of a male singing at his display perch near [Macuquinho Lodge](https://www.sitiomacuquinho.com.br):
-
-```{r, echo=FALSE, out.width="80%", fig.cap="Male bare-throated bellbird singing in Brazil."}
+```{r bellbird-frame, echo=FALSE, out.width="80%", fig.cap="Male bare-throated bellbird singing in Brazil. The image shows the labeled jaw tips and left and right base landmarks."}
 knitr::include_graphics("figures/bellbird.png")
 ```
 
 How widely is he opening his beak? Let's find out.
 
-The first step is to identify landmarks. They are highlighted in the video frame: tip (dark) and base (light) of the upper (blue) and lower (red) mandibles. Here are their coordinates, obtained with labeling software:
+### Step 1: define the directed vectors
 
-> **Note**
-> In `araponga`, *x* coordinates increase to the right and *y* coordinates increase upward. Some labeling software uses different coordinate systems.
+First, I labeled the tip and two corresponding lateral base landmarks on each jaw. The upper jaw is shown in blue, the lower in red; tips are dark and base landmarks are light. Coordinates were obtained with labeling software.
 
-> **Important**
-> The camera is assumed to be horizontally aligned. If the image is tilted because the camera was rolled clockwise or counterclockwise, rotate/correct the frame or coordinates before analysis.
+> **Notes**
+> In `araponga`, *x* increases to the right and *y* increases upward. Convert coordinates from labeling software if necessary.
+> The camera is also assumed to be level (no image roll); correct a rolled image or its coordinates before applying the model.
 
-```{r}
-# upper tip
-x_ut <- -718.5216072
-y_ut <- -78.5485277
+```{r bellbird-landmarks}
+# Upper jaw tip
+x_ut <- 779.1665929
+y_ut <- -118.5923004
 
-# upper base
-x_ub <- -782.5250905
-y_ub <- -105.2195211
+# Upper jaw left and right base landmarks
+x_ubl <- 801.2635377
+y_ubl <- -172.4408205
+x_ubr <- 758.6076256
+y_ubr <- -171.9911809
 
-# lower tip
-x_lt <- -689.0089234
-y_lt <- -210.4188121
+# Lower jaw tip
+x_lt <- 777.9828121
+y_lt <- -267.6136455
 
-# lower base
-x_lb <- -751.2784311
-y_lb <- -178.5397719
+# Lower jaw left and right base landmarks
+x_lbl <- 805.4430586
+y_lbl <- -247.8488698
+x_lbr <- 752.4028602
+y_lbr <- -248.1718717
 ```
 
-Before estimating gape angle, we need to first estimate the 3D pitch of each mandible, then calculate the difference between them. We'll start with the upper mandible pitch.
+For each jaw, I use the midpoint of its two lateral base landmarks to approximate the base of its central axis:
 
-### Step 1: observed 2D projection
+```{r central-axis-midpoints}
+# Midpoint of the two upper base landmarks
+x_ub <- mean(c(x_ubl, x_ubr))
+y_ub <- mean(c(y_ubl, y_ubr))
+
+# Midpoint of the two lower base landmarks
+x_lb <- mean(c(x_lbl, x_lbr))
+y_lb <- mean(c(y_lbl, y_lbr))
+```
+
+Using the central base is a system-specific decision: the central axis better represents the orientation of each jaw than either lateral edge.
+
+Before estimating gape angle, we need to first estimate the 3D pitch of each jaw, then calculate the difference between them. We'll start with the lower jaw pitch.
+
+### Step 2: describe the observed 2D projections
 
 The starting point is the 2D projection visible in the image, which can be described from the two landmarks with `project2d.from.xy()`:
 
-```{r}
-upper_2d <- project2d.from.xy(x_ut, y_ut, x_ub, y_ub, plot = TRUE)
-upper_2d
+```{r lower-2d}
+lower_2d <- project2d.from.xy(x_tip = x_lt, y_tip = y_lt,
+                              x_base = x_lb, y_base = y_lb,
+                              plot = TRUE)
 ```
 
-The returned `araponga2d` object contains the landmark coordinates, projected 2D pitch (`pitch2d`), and projected length (`length2d`).
+The returned `araponga2d` object retains the original coordinates, projected angle (`pitch2d`), and projected length (`length2d`).
 
-If the bird had been filmed perfectly side-on and at eye level, the projected 2D pitch would equal the true 3D pitch:
-
-```{r}
-upper_2d$pitch2d
-```
-
-We can verify this with `find.pitch()` by specifying `candidate_view_elevations = 0` (eye-level) and `candidate_yaws = 0` (pointed straight right). We'll assume ±1 pixel of landmark labeling error for this exercise.
-
-> **Important**
-> The returned angles are not “the true angle”; they are the angles compatible with the observed 2D projection, labeling error, and candidate constraints.
+In this frame, the lower axis projects almost straight down. If the bird had been filmed perfectly side-on and at eye level, the projected 2D pitch would equal the true 3D pitch:
 
 ```{r}
-upper_pitch <- find.pitch(observed2d = upper_2d,
-                          label_error = 1,
-                          candidate_view_elevations = 0,
-                          candidate_yaws = 0)
-
-upper_pitch
-plot.angles(upper_pitch, "pitch")
+lower_2d$pitch2d
 ```
-
-Assuming ±1 pixel of labeling uncertainty, the upper mandible pitch would be between `r min(upper_pitch)`° and `r max(upper_pitch)`°.
-
-### Step 2: dealing with real camera angles
 
 But of course that's not real life — at least not for field biologists. Just by looking at the frame, we can tell that the bird is neither exactly eye-level nor exactly side-on.
 
-If we provide no information about viewing geometry, many 3D pitch orientations remain possible:
+What happens if we try to recover lower-jaw pitch using only the landmarks and a maximum labeling error of ±1 pixel per coordinate?
 
-```{r}
-upper_pitch <- find.pitch(upper_2d,
-                          label_error = 1)
-
-upper_pitch
-plot.angles(upper_pitch, "pitch")
+```{r initially-unconstrained}
+lower_pitch_unconstrained <- find.pitch(observed2d = lower_2d,
+                                        label_error = 1)
+lower_pitch_unconstrained
+plot.angles(lower_pitch_unconstrained, type = "pitch")
 ```
 
-The result is almost completely unconstrained: the mandible could plausibly point anywhere from nearly straight down to nearly straight up. This is expected. A single 2D projection alone cannot resolve 3D orientation.
+The result is almost completely unconstrained: the beak could plausibly point anywhere from straight down to nearly straight up.
 
 The power of `araponga` comes from adding whatever information you have.
 
-### Step 3: adding known view elevation
+### Step 3: include measured view elevation
 
-In this case, I measured my filming angle with a laser range finder, and will assume a ±1° measurement error:
+For this recording, I measured the filming angle with a laser rangefinder. The estimated camera elevation was -9.4°, and here I allow ±1° uncertainty:
 
-```{r}
-measured_elevation <- seq(-34.2 - 1, -34.2 + 1, 0.1)
+```{r view-elevation}
+measured_elevation <- seq(-10.4, -8.4, by = 0.1)
 
 plot.angles(measured_elevation,
             type = "view_elevation",
-            main = "measured view elevation")
+            main = "candidate view elevations")
 ```
 
-Including this information narrows the possible pitches:
+We can use that information to limit the compatible orientations:
 
-```{r}
-upper_pitch <- find.pitch(upper_2d,
-                          label_error = 1,
-                          candidate_view_elevations = measured_elevation)
-
-upper_pitch
-plot.angles(upper_pitch, "pitch")
+```{r pitch-with-elevation}
+lower_pitch_elevation <- find.pitch(observed2d = lower_2d,
+                                    label_error = 1,
+                                    candidate_view_elevations = measured_elevation)
+lower_pitch_elevation
+plot.angles(lower_pitch_elevation, type = "pitch")
 ```
 
-### Step 4: adding approximate yaw
+View elevation removes many camera configurations, but the near-frontal projection can still be compatible with a broad range of pitches: `r min(lower_pitch_elevation)`° to `r max(lower_pitch_elevation)`°.
 
-Although I did not know the exact yaw of the bird, the image provides useful information: the beak appears to point somewhere between side-on and slightly facing the camera.
+### Step 4: include approximate yaw
 
-We can encode this uncertainty as a range:
+Although I did not know the exact yaw of the bird's beak, the image provides useful information: the beak is directed roughly toward the camera.
 
-```{r}
-assumed_yaw <- -45:0
+We can encode this uncertainty as a range of 20° on either side of directly facing the camera (`yaw = -90°`):
+
+```{r assumed-yaw}
+assumed_yaw <- -110:-70
 
 plot.angles(assumed_yaw,
             type = "yaw",
             labels = TRUE,
-            main = "assumed yaw range")
+            main = "candidate yaw range")
 ```
 
-and include it for pitch estimation:
+Adding yaw to the search further restricts the combinations of pitch, yaw, and view elevation that are considered:
+
+```{r pitch-with-yaw}
+lower_pitch_direction <- find.pitch(observed2d = lower_2d,
+                                    label_error = 1,
+                                    candidate_yaws = assumed_yaw,
+                                    candidate_view_elevations = measured_elevation)
+
+lower_pitch_direction
+plot.angles(lower_pitch_direction, type = "pitch")
+```
+
+Constraining yaw further narrows the range of compatible pitches, but not by much: `r min(lower_pitch_direction)`° to `r max(lower_pitch_direction)`°. That's because, with the beak almost facing the camera, projected direction remains relatively uninformative on its own.
+
+### Step 5: use physical length to constrain foreshortening
+
+The projected length provides another clue. A vector pointed toward the camera can appear much shorter than a vector of the same length oriented across the image plane. To use this information, `araponga` needs a range for `full_length`: the length that the vector would occupy **in image pixels without foreshortening**.
+
+We can estimate `full_length` from physical measurements of the anatomical vector, distance to object, and camera parameters, when available. For this vector and frame:
+
+```{r physical-length-inputs}
+physical_length_lower_mm <- c(19, 23) # mm range; central-axis base to tip
+distance_m <- c(46.3, 46.9)         # m range; camera to bird
+
+# Camera parameters:
+image_width_px <- 1920
+focal_length_mm <- 428.4
+sensor_width_mm <- 6.17
+```
+
+`full_length.from.camera()` then converts the physical length ranges to pixel ranges:
+
+```{r full-lengths-from-camera}
+full_length_lower <- full_length.from.camera(
+  length_physical = physical_length_lower_mm,
+  distance = distance_m * 1000,  # m to mm
+  image_width = image_width_px,
+  focal_length = focal_length_mm,
+  sensor_width = sensor_width_mm
+)
+full_length_lower
+```
+
+According to our inputs, the vector should be `r round(min(full_length_lower))` to `r round(max(full_length_lower))` pixels long when unforeshortened. Let's incorporate this information for finding compatible 3D pitches:
+
+```{r pitch-with-length}
+lower_pitch <- find.pitch(observed2d = lower_2d,
+                          label_error = 1,
+                          full_length = full_length_lower,
+                          candidate_yaws = assumed_yaw,
+                          candidate_view_elevations = measured_elevation)
+plot.angles(lower_pitch, type = "pitch")
+```
+
+The range of compatible 3D pitches is now much narrower: `r min(lower_pitch)`° to `r max(lower_pitch)`°. This is because the vector's projected length is much shorter than the estimate of its unforeshortened length.
+
+### Biological application: estimating gape
+
+Let's now repeat steps 1—5 above for the upper jaw, to then estimate beak gape angle.
 
 ```{r}
-upper_pitch <- find.pitch(upper_2d,
+upper_2d <- project2d.from.xy(x_tip = x_ut, y_tip = y_ut,
+                              x_base = x_ub, y_base = y_ub)
+
+physical_length_upper_mm <- c(20, 24)
+
+full_length_upper <- full_length.from.camera(length_physical = physical_length_upper_mm,
+                                             distance = distance_m * 1000,
+                                             image_width = image_width_px,
+                                             focal_length = focal_length_mm,
+                                             sensor_width = sensor_width_mm)
+
+upper_pitch <- find.pitch(observed2d = upper_2d,
                           label_error = 1,
+                          full_length = full_length_upper,
                           candidate_yaws = assumed_yaw,
                           candidate_view_elevations = measured_elevation)
 
-upper_pitch
-plot.angles(upper_pitch, "pitch")
 ```
 
-Now the possible pitch range is much narrower. Importantly, this is not because `araponga` became more certain — it is because we provided additional assumptions.
-
-Let's repeat the process for the lower mandible:
+And visualize both:
 
 ```{r}
-lower_2d <- project2d.from.xy(x_lt, y_lt, x_lb, y_lb)
 
-lower_pitch <- find.pitch(lower_2d,
-                          label_error = 1,
-                          candidate_yaws = assumed_yaw,
-                          candidate_view_elevations = measured_elevation)
+plot.angles(lower_pitch, "pitch")
+plot.angles(upper_pitch, "pitch", add = TRUE)
 
-lower_pitch
 ```
 
-and visualize both estimates:
 
-```{r}
-plot.angles(upper_pitch, "pitch")
-plot.angles(lower_pitch, "pitch", add = TRUE)
-```
-
-### Step 5: calculating gape angle
-
-Finally, gape is the difference between upper- and lower-mandible pitch:
+Assuming no head tilt, gape is then the difference between upper- and lower-jaw pitch:
 
 ```{r}
 gapes <- sort(unique(as.vector(outer(upper_pitch, lower_pitch, "-"))))
 gapes
 ```
 
-Given our assumptions, the possible gape angles range from `r min(gapes)`° to `r max(gapes)`°.
-
-This calculation allows any possible upper mandible pitch to combine with any possible lower mandible pitch. If we assume the beak opens in a vertical plane — i.e., if the head is not tilted sideways, a reasonable assumption for singing bellbirds —, we can extract possible gapes on a per-yaw basis. The `paired` argument in `find.pitch()` facilitates that:
-
-```{r}
-upper_pitch_paired <- find.pitch(upper_2d,
-                                 label_error = 1,
-                                 candidate_yaws = assumed_yaw,
-                                 candidate_view_elevations = measured_elevation,
-                                 paired = TRUE)
-
-lower_pitch_paired <- find.pitch(lower_2d,
-                                 label_error = 1,
-                                 candidate_yaws = assumed_yaw,
-                                 candidate_view_elevations = measured_elevation,
-                                 paired = TRUE)
-```
-
-`paired = TRUE` gives us a data frame with the possible pitches for each possible yaw. Let's extract per-yaw possible gapes and pool them:
-
-```{r}
-all_yaws <- unique(c(upper_pitch_paired$yaw, lower_pitch_paired$yaw))
-
-per_yaw_gapes <- NULL
-for(y in all_yaws){
-  
-  rel_upper_pitch <- upper_pitch_paired$pitch[upper_pitch_paired$yaw == y]
-  rel_lower_pitch <- lower_pitch_paired$pitch[lower_pitch_paired$yaw == y]
-  per_yaw_gapes <- c(per_yaw_gapes,
-                     unique(as.vector(outer(rel_upper_pitch, rel_lower_pitch,"-"))))
-}
-
-per_yaw_gapes <- sort(unique(per_yaw_gapes))
-
-per_yaw_gapes
-```
-
-Gape is now estimated between `r min(per_yaw_gapes)`° and `r max(per_yaw_gapes)`°.
+Here, we calculate all possible pitch differences, although some combinations may be incompatible because the two beak components must share the same yaw and view elevation. For a more constrained estimate, `find.3d()` can be used to retain these variables and combine only compatible configurations.
 
 ## What if I'm interested in yaw?
 
 We can apply a similar workflow to estimate the yaw at which the bellbird is singing in the frame. The input is still the projected 2D pitch, but now we ask which yaws — rather than which pitches — are compatible with it.
 
-To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenient wrapper to the generic `find.3d()`. Let's start by assuming the upper mandible always opens approximately upward:
-
-```{r}
-upper_yaw <- find.yaw(upper_2d,
-                      label_error = 1,
-                      candidate_pitches = -20:90,
-                      candidate_view_elevations = measured_elevation)
-
-upper_yaw
-plot.angles(upper_yaw, "yaw")
-```
-
-and the lower mandible approximately downward:
+To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenience wrapper to the generic `find.3d()`. Let's start by assuming the lower jaw always opens approximately upward:
 
 ```{r}
 lower_yaw <- find.yaw(lower_2d,
                       label_error = 1,
+                      full_length = full_length_lower,
                       candidate_pitches = -90:20,
                       candidate_view_elevations = measured_elevation)
 
@@ -310,66 +314,43 @@ lower_yaw
 plot.angles(lower_yaw, "yaw")
 ```
 
-Under the no-head-tilt assumption, they should also share the same yaw. We can therefore restrict possible yaws to values compatible with both mandibles:
+and the upper jaw approximately downward:
 
 ```{r}
-both_yaw <- intersect(lower_yaw, upper_yaw)
+upper_yaw <- find.yaw(upper_2d,
+                      label_error = 1,
+                      full_length = full_length_upper,
+                      candidate_pitches = -20:90,
+                      candidate_view_elevations = measured_elevation)
+
+upper_yaw
+plot.angles(upper_yaw, "yaw")
+```
+
+Under the assumption of no head tilt, they should share the same yaw. We can therefore restrict possible yaws to values compatible with both jaws:
+
+```{r}
+both_yaw <- intersect(upper_yaw, lower_yaw)
 plot.angles(both_yaw, "yaw")
 ```
 
-We can go one step further. Some yaw values may be possible for both mandibles independently, but only under pitch combinations that are biologically unrealistic. For example, a yaw that only allows negative gape angles would imply the lower mandible is above the upper mandible.
-
-To test this, we can again use `paired = TRUE` to preserve which pitches are possible under each yaw:
+Another way to narrow down yaw is by comparing multiple observations. Suppose that, in the next frame, we can visually tell that the bird rotates its head right (clockwise in `araponga` convention) by no more than 90°. Suppose also that possible yaws for that frame have been estimated as:
 
 ```{r}
-upper_yaw_paired <- find.yaw(upper_2d,
-                             label_error = 1,
-                             candidate_pitches = -20:90,
-                             candidate_view_elevations = measured_elevation,
-                             paired = TRUE)
-
-lower_yaw_paired <- find.yaw(lower_2d,
-                             label_error = 1,
-                             candidate_pitches = -90:20,
-                             candidate_view_elevations = measured_elevation,
-                             paired = TRUE)
-
-max_gape_per_yaw <- data.frame(yaw = both_yaw,
-                               gape = NA)
-
-for(i in seq_along(max_gape_per_yaw$yaw)){
-  rel_yaw <- max_gape_per_yaw$yaw[i]
-  
-  rel_upper_pitch <- upper_yaw_paired$pitch[upper_yaw_paired$yaw == rel_yaw]
-  rel_lower_pitch <- lower_yaw_paired$pitch[lower_yaw_paired$yaw == rel_yaw]
-  
-  max_gape_per_yaw$gape[i] <- max(outer(rel_upper_pitch, rel_lower_pitch, "-"))
-}
-
-yaw <- max_gape_per_yaw$yaw[max_gape_per_yaw$gape >= 0]
-
-any(max_gape_per_yaw$gape < 0)
-```
-
-No yaw was excluded in this example, but this illustrates how information about your system can be used to remove unrealistic orientations.
-
-Another way to narrow down yaw is by comparing multiple observations. Suppose that, in the next frame, you can visually tell that the bird rotates its head right (clockwise in `araponga` convention) by no more than 90°. Suppose also that possible yaws for that frame are estimated as:
-
-```{r}
-next_frame_yaw <- -50:90
+next_frame_yaw <- -150:-120
 ```
 
 We can use `trim.yaws()` to keep only yaw values consistent with this movement:
 
 ```{r}
 # orange = excluded; blue = retained
-trimmed <- trim.yaws(ccw_yaws = yaw,
+trimmed <- trim.yaws(ccw_yaws = both_yaw,
                      cw_yaws = next_frame_yaw,
                      min_sep = 0,
                      max_sep = 90,
                      plot = TRUE)
 
-yaw <- trimmed$trimmed_ccw_yaws
+both_yaw <- trimmed$trimmed_ccw_yaws
 next_frame_yaw <- trimmed$trimmed_cw_yaws
 ```
 
@@ -377,148 +358,35 @@ The logic is the same throughout `araponga`: describe what is known about the ob
 
 ## Choosing candidate values
 
-The `candidate_...` arguments define the 3D configurations that araponga evaluates. They are the main way of expressing prior information or defensible assumptions about the geometry of your system.
+The `candidate_...` arguments determine which 3D configurations `araponga` evaluates. They can describe measurement uncertainty, observations made in the field, or biological and mechanical constraints.
 
-There is no universally correct range: the best choice depends on what information you have before estimating the angle of interest.
+For example, an independently measured camera elevation of -30° with ±5° uncertainty might be represented as:
 
-For example, candidate values can account for measurement uncertainty:
-
-```{r}
-# view elevation measured as -30 degrees, allowed ±5 degrees measurement error
+```{r, eval=FALSE}
 candidate_view_elevations = -35:-25
 ```
 
-They can represent approximate field observations:
+Approximate viewing conditions might be represented as:
 
-```{r}
-# camera approximately level with the object
+```{r, eval=FALSE}
+# Roughly eye-level view
 candidate_view_elevations = -20:20
 
-# object approximately side-on facing left
-candidate_yaws = c(-160:-179, 160:180)
-
-# object generally facing the camera
+# Object mostly facing the camera
 candidate_yaws = -120:-60
+
+# Object approximately side-on, facing left
+candidate_yaws = c(-179:-160, 160:180)
 ```
 
-or incorporate anatomical or behavioral constraints:
+Biological knowledge can likewise justify candidate pitch ranges:
 
-```{r}
-# structure cannot realistically point downward
+```{r, eval=FALSE}
+# A structure that cannot point downward
 candidate_pitches = 0:90
 
-# lower mandible of a bird opening mostly downward
+# A bird's upper jaw opening mainly downward
 candidate_pitches = -90:20
 ```
 
 Broader candidate ranges make fewer assumptions but return more uncertainty. Narrower ranges return more precise estimates, but only if the assumptions behind them are justified.
-
-## Using object length to constrain orientation
-
-So far, we have used landmark coordinates and labeling error to constrain projected direction. In some applications, information about the object's length can provide an additional constraint.
-
-If the unprojected length of the base-to-tip vector is known or can be bounded, supply it through `full_length`:
-
-```{r, eval = FALSE}
-find.pitch(observed2d = upper_2d,
-           label_error = 1,
-           full_length = c(min_length, max_length),
-           candidate_view_elevations = measured_elevation,
-           candidate_yaws = assumed_yaw)
-```
-
-With this route, `araponga` uses projected direction and projected length jointly. This can exclude orientations that produce the correct projected pitch but the wrong amount of foreshortening.
-
-An important point is that `full_length` must use the same units as the 2D coordinates. If landmarks were labeled in pixels, for example, `full_length` must represent the length the object would occupy in pixels if it were not foreshortened. A physical object length in millimeters cannot therefore be supplied directly as `full_length`.
-
-### Estimating `full_length`
-
-`araponga` provides two helper functions for converting physical measurements into an appropriate unprojected image length.
-
-If the physical length of the object, its distance from the camera, and the camera geometry are known, use `full_length.from.camera()`. Camera geometry can be supplied either as focal length and sensor width:
-
-```{r, eval = FALSE}
-full_length <- full_length.from.camera(
-  length_physical = c(28, 31),
-  distance = c(2900, 3100),
-  image_width = 1920,
-  focal_length = 6.1,
-  sensor_width = 6.2
-)
-```
-
-or as horizontal field of view:
-
-```{r, eval = FALSE}
-full_length <- full_length.from.camera(
-  length_physical = c(28, 31),
-  distance = c(2900, 3100),
-  image_width = 1920,
-  field_of_view = c(50, 52)
-)
-```
-
-`length_physical` and `distance` must use the same physical units; likewise, `focal_length` and `sensor_width` must use the same units. The returned `full_length` is in pixels.
-
-Alternatively, if a reference segment of known physical length is visible at approximately the same camera distance as the target object, use `full_length.from.reference()`:
-
-```{r, eval = FALSE}
-full_length <- full_length.from.reference(
-  length_physical = c(28, 31),
-  reference_physical = 20,
-  reference_px = c(80, 84)
-)
-```
-
-The reference segment should be approximately perpendicular to the camera's viewing axis so that its observed pixel length is not substantially foreshortened.
-
-Both helper functions accept ranges, allowing uncertainty in physical measurements, distance, camera parameters, or reference measurements to propagate into the resulting range of possible `full_length` values.
-
-A reference pixel length measured from the same object under a known orientation with no foreshortening can also be supplied directly as `full_length`, provided image scale is unchanged.
-
-When landmark coordinates are available, combining `observed2d`, `label_error`, and `full_length` is preferable to separately supplying ranges of `pitch2d` and `length2d`, because the joint uncertainty in projected direction and length can then be retained.
-
-## Supplying projected constraints directly
-
-The standard `araponga` workflow starts from two 2D landmarks. However, if projected measurements have already been obtained elsewhere, `pitch2d` and/or `length2d` can instead be supplied directly to `find.3d()` and its wrappers.
-
-For example, a range of possible projected pitches can be used with:
-
-```{r, eval = FALSE}
-find.3d(pitch2d = c(20, 25),
-        candidate_pitches = ...,
-        candidate_yaws = ...,
-        candidate_view_elevations = ...)
-```
-
-Projected length can also constrain the search when `full_length` is available:
-
-```{r, eval = FALSE}
-find.3d(length2d = c(60, 65),
-        full_length = c(90, 100),
-        ...)
-```
-
-or both constraints may be supplied:
-
-```{r, eval = FALSE}
-find.3d(pitch2d = c(20, 25),
-        length2d = c(60, 65),
-        full_length = c(90, 100),
-        ...)
-```
-
-These direct routes are useful when landmark coordinates are unavailable or projected measurements have already been derived by another method. When the original landmarks are available, supplying `observed2d` is generally preferable because `araponga` can preserve the relationship between projected direction and length under landmark-labeling uncertainty.
-
-## From 3D orientation back to a 2D projection
-
-`project2d.from.3d()` solves the forward version of the same geometric problem: given pitch, yaw, and view elevation, it predicts the projected 2D pitch and relative projected length.
-
-```{r}
-project2d.from.3d(pitch = 30,
-                  yaw = -40,
-                  view_elevation = -20,
-                  plot = TRUE)
-```
-
-If `full_length` is supplied, it also returns projected length and projected *x*–*y* components. This can be useful for simulation, validation, or exploring how viewing geometry affects an object's appearance.
