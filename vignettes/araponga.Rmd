@@ -42,7 +42,7 @@ The general workflow is:
         -> optional application-specific constraints or calculations
 ```
 
-This vignette demonstrates that workflow using video of a singing bare-throated bellbird (*Procnias nudicollis*), known as an "araponga" in Brazil. The biological motivation is to estimate beak opening, but the functions demonstrated here estimate the **orientation of directed vectors**. Defining anatomically meaningful vectors and calculating a biological quantity such as gape are separate, application-specific steps.
+This vignette demonstrates that workflow using video of a singing bare-throated bellbird (*Procnias nudicollis*), known as "araponga" in Brazil. The biological motivation is to estimate how widely the bird opens its beak, an essential step of which is estimating the 3D orientation of each jaw, represented by a directed vector.
 
 Before getting to the case study, let's define a few angle conventions used throughout the package.
 
@@ -70,12 +70,12 @@ You can display these conventions at any time with `conventions()`.
 
 ## Case study: beak gape angle in bellbirds
 
-During my PhD, I investigated how widely bare-throated bellbirds open their beaks when singing, and whether extreme gape helps them produce exceptionally high-amplitude vocalizations.
+During my PhD, I investigated how widely bare-throated bellbirds open their beaks when singing, and whether extreme gape helps them produce their [exceptionally loud songs](https://doi.org/10.1093/evolut/qpag153).
 
 I recorded singing males in the Atlantic Forest of Brazil. The frame below shows a male at his display perch in the [Legado das Águas Reserve](https://www.legadodasaguas.com.br).
 
-```{r bellbird-frame, echo=FALSE, out.width="80%", fig.cap="Male bare-throated bellbird singing in Brazil. The image shows the labeled jaw tips and left and right base landmarks."}
-knitr::include_graphics("figures/bellbird.png")
+```{r bellbird-frame, echo=FALSE, out.width="80%", fig.cap="Male bare-throated bellbird singing in Brazil."}
+knitr::include_graphics("figures/bellbird_landmarks.png")
 ```
 
 How widely is he opening his beak? Let's find out.
