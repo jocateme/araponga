@@ -1,33 +1,23 @@
-## Resubmission
+## Release summary
 
-This is a resubmission shortly after the previous CRAN release.
+This is an update of `araponga` from version 1.1.0 to 2.0.0.
 
-This update fixes a numerical edge case affecting the simulation-based lookup table used by `find.3d()`. Near-degenerate projected vectors could previously inherit arbitrary two-dimensional pitch values from floating-point residuals. The relevant functions and external simulation dataset have therefore been updated so that these edge cases are handled consistently.
+Version 2.0.0 introduces a substantial redesign of the package's orientation-estimation workflow, including breaking changes to the public API.
 
-This is a resubmission.
+The main changes are:
 
-* regenerated the external simulation dataset used by `find.3d()`;
-* updated `download.simdata()` and `find.3d()` to retrieve the corrected, versioned Zenodo dataset and warn users who may have an older cached version installed;
-* added the code used to generate the external simulation dataset to `data-raw/simdata`;
-* fixed floating-point handling for degenerate projections in `pitch2d.from.3d()`;
-* fixed a `find.3d()` bug that could drop the intended column name when returning a single selected column;
-* clarified documentation for the `label_error` argument;
-* fixed a plotting bug in `plot.angles()` when `facing = "left"`.
+- Replaced the precomputed simulation lookup table with direct calculations of projected 2D geometry. This removes the need for external simulation data downloads and the associated dependencies.
+- Extended orientation searches to incorporate projected length as well as projected direction, including their joint uncertainty when calculated from labeled landmarks.
+- Added `full_length.from.camera()` and `full_length.from.reference()` to estimate unprojected image length from camera geometry or reference measurements.
+- Renamed and extended the projection functions, updated their return structures, and introduced the `araponga2d` observation format.
+- Added controls for candidate-angle resolution and search size.
 
-## Resubmission timing
-
-This update is being submitted shortly after the previous CRAN release because it corrects package behavior involving the external simulation dataset used by `find.3d()`.
-
-I understand that frequent CRAN updates should be avoided. However, I believe this early update is warranted because it fixes a numerical correctness issue in the simulation-based lookup procedure, rather than making cosmetic or documentation-only changes.
+These changes improve flexibility, numerical precision, and independence from external data. The breaking changes and migration guidance are documented in `NEWS.md`.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 note
 
-* Days since last update: 5
+## Reverse dependencies
 
-This note is expected because the package was recently accepted on CRAN. The short interval reflects the correctness fix described above.
-
-## Downstream dependencies
-
-There are currently no downstream dependencies for this package.
+There are no reverse dependencies on CRAN.
