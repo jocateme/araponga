@@ -75,7 +75,7 @@ During my PhD, I investigated how widely bare-throated bellbirds open their beak
 I recorded singing males in the Atlantic Forest of Brazil. The frame below shows a male at his display perch in the [Legado das Águas Reserve](https://www.legadodasaguas.com.br).
 
 ```{r bellbird-frame, echo=FALSE, out.width="80%", fig.cap="Male bare-throated bellbird singing in Brazil."}
-knitr::include_graphics("figures/bellbird_landmarks.png")
+knitr::include_graphics("figures/bellbird.png")
 ```
 
 Estimating gape requires first recovering the 3D orientation of each jaw. Let's work through that step.
@@ -84,9 +84,7 @@ Estimating gape requires first recovering the 3D orientation of each jaw. Let's 
 
 First, I labeled the tip and two corresponding lateral base landmarks on each jaw. The upper jaw is shown in blue, the lower in red; tips are dark and base landmarks are light. Coordinates were obtained with labeling software.
 
-> **Notes**
-> In `araponga`, *x* increases to the right and *y* increases upward. Convert coordinates from labeling software if necessary.
-> The camera is also assumed to be level (no image roll); correct a rolled image or its coordinates before applying the model.
+> **Note**: In `araponga`, *x* increases to the right and *y* increases upward. Convert coordinates from labeling software if necessary. The camera is also assumed to be level (no image roll); correct a rolled image or its coordinates before applying the model.
 
 ```{r bellbird-landmarks}
 # Upper jaw tip
@@ -294,13 +292,13 @@ gapes <- sort(unique(as.vector(outer(upper_pitch, lower_pitch, "-"))))
 gapes
 ```
 
-Here, we calculate all possible pitch differences, although some combinations may be incompatible because the two beak components must share the same yaw and view elevation. A more constrained estimate can be obtained by retaining yaw and view elevation with `find.3d()` and calculating differences only between matching configurations.
+This is a simplified, conservative estimate: by considering all possible pitch differences, we include combinations that may not be physically compatible, since the two jaws must share the same viewing geometry. A more constrained estimate would use `find.3d()` to retain the pitch, yaw, and view elevation of each compatible configuration, then combine only configurations consistent with both jaws. This additional step is beyond the scope of this vignette.
 
 ## What if I'm interested in yaw?
 
 We can apply a similar workflow to estimate the yaw at which the bellbird is singing in the frame. The input is still the projected 2D pitch, but now we ask which yaws — rather than which pitches — are compatible with it.
 
-To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenience wrapper to the generic `find.3d()`. Let's start by assuming the lower jaw always opens approximately downward:
+To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenience wrapper to the generic `find.3d()`. Let's start by assuming the lower jaw always opens predominantly downward:
 
 ```{r}
 lower_yaw <- find.yaw(lower_2d,
@@ -313,7 +311,7 @@ lower_yaw
 plot.angles(lower_yaw, "yaw")
 ```
 
-and the upper jaw approximately upward:
+and the upper jaw predominantly upward:
 
 ```{r}
 upper_yaw <- find.yaw(upper_2d,
@@ -356,6 +354,8 @@ next_frame_yaw <- trimmed$trimmed_cw_yaws
 The logic is the same throughout `araponga`: describe what is known about the object's 2D projection, then use additional geometric or system-specific information to determine which 3D configurations are compatible with those observations.
 
 ## Choosing candidate values
+
+>**Note**: Candidate angles are evaluated at the supplied values, so the returned sets also depend on search resolution. Finer grids may identify compatible orientations missed by coarser grids, at the cost of increased computation.
 
 The `candidate_...` arguments determine which 3D configurations `araponga` evaluates. They can describe measurement uncertainty, observations made in the field, or biological and mechanical constraints.
 
