@@ -186,6 +186,10 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
   if(is.null(main)) main <- "pitch\n(side view)"
   if(is.null(col)) col <- "cadetblue"
   
+  if(facing == "left"){
+    pitches <- pi - pitches
+  }
+  
   if(!add){
     if(fullcircle){
       theta <- seq(0, 2*pi, length.out = 400)
@@ -195,10 +199,6 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
       } else {
         theta <- seq(90, 270, length.out = 200) * pi/180
       }
-    }
-    
-    if(facing == "left"){
-      pitches <- pi - pitches
     }
     
     graphics::plot(x = cos(theta),
@@ -326,13 +326,16 @@ conventions <- function(type = c("pitch", "yaw", "view_elevation")){
   if(is.null(main)) main <- "view elevation\n(side view)"
   if(is.null(col)) col <- "darkolivegreen"
   
+  if(facing == "left"){
+    elevations <- pi - elevations
+  }
+  
   if(!add){
     
     if(facing == "right"){
       theta <- seq(-90, 90, length.out = 200) * pi/180
     } else {
       theta <- seq(90, 270, length.out = 200) * pi/180
-      elevations <- pi - elevations
     }
     
     graphics::plot(x = 0 + 1 * cos(theta),
