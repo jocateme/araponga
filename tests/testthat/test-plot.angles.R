@@ -4,7 +4,7 @@ test_that("plot.angles validates angles input", {
     "`angles` must be provided \\(numeric vector, list, or data.frame\\)."
   )
   expect_error(
-    plot.angles(numeric(0)),
+    plot.angles(list()),
     "`angles` must be provided \\(numeric vector, list, or data.frame\\)."
   )
 })
@@ -45,7 +45,7 @@ test_that("plot.angles rejects non-numeric angle values", {
 test_that("plot.angles runs for numeric vectors", {
   pdf(NULL)
   on.exit(dev.off(), add = TRUE)
-
+  
   expect_no_error(plot.angles(60:70, type = "pitch", labels = FALSE))
   expect_no_error(plot.angles(-30:-40, type = "view_elevation", labels = FALSE))
   expect_no_error(plot.angles(-100:-45, type = "yaw", labels = FALSE))
@@ -55,7 +55,7 @@ test_that("plot.angles runs for numeric vectors", {
 test_that("plot.angles runs when adding to an existing plot", {
   pdf(NULL)
   on.exit(dev.off(), add = TRUE)
-
+  
   plot.angles(0:10, type = "yaw", labels = FALSE)
   expect_no_error(plot.angles(20:30, type = "yaw", add = TRUE, labels = FALSE))
 })
@@ -70,5 +70,68 @@ test_that("plot.angles displays extended pitches", {
   
   expect_no_error(
     plot.angles(-135, type = "pitch", labels = FALSE)
+  )
+})
+
+test_that("plot.angles draws reference diagrams for empty numeric vectors", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  expect_warning(
+    plot.angles(numeric(0), type = "pitch"),
+    "One or more angle sets are empty."
+  )
+  expect_warning(
+    plot.angles(numeric(0), type = "yaw"),
+    "One or more angle sets are empty."
+  )
+  expect_warning(
+    plot.angles(numeric(0), type = "view_elevation"),
+    "One or more angle sets are empty."
+  )
+  expect_warning(
+    plot.angles(numeric(0)),
+    "One or more angle sets are empty."
+  )
+  expect_warning(
+    plot.angles(numeric(0), type = "pitch", facing = "left"),
+    "One or more angle sets are empty."
+  )
+  expect_warning(
+    plot.angles(numeric(0), type = "view_elevation", facing = "left"),
+    "One or more angle sets are empty."
+  )
+})
+
+test_that("plot.angles handles empty sets in named lists", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  expect_warning(
+    plot.angles(list(pitch = numeric(0))),
+    "One or more angle sets are empty."
+  )
+})
+
+test_that("plot.angles handles mixed empty and nonempty sets", {
+  skip_if(interactive())
+  
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  expect_warning(
+    plot.angles(list(pitch = numeric(0), yaw = 10:20)),
+    "One or more angle sets are empty."
+  )
+})
+
+test_that("plot.angles skips empty sets when adding to an existing plot", {
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  
+  plot.angles(0:10, type = "yaw", labels = FALSE)
+  expect_warning(
+    plot.angles(numeric(0), type = "yaw", add = TRUE),
+    "One or more angle sets are empty."
   )
 })
