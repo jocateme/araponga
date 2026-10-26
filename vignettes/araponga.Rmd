@@ -78,7 +78,7 @@ I recorded singing males in the Atlantic Forest of Brazil. The frame below shows
 knitr::include_graphics("figures/bellbird_landmarks.png")
 ```
 
-How widely is he opening his beak? Let's find out.
+Estimating gape requires first recovering the 3D orientation of each jaw. Let's work through that step.
 
 ### Step 1: define the directed vectors
 
@@ -256,7 +256,7 @@ The range of compatible 3D pitches is now much narrower: `r min(lower_pitch)`° 
 
 ### Biological application: estimating gape
 
-Let's now repeat steps 1—5 above for the upper jaw, to then estimate beak gape angle.
+Let's now repeat steps 1—5 above for the upper jaw:
 
 ```{r}
 upper_2d <- project2d.from.xy(x_tip = x_ut, y_tip = y_ut,
@@ -287,7 +287,6 @@ plot.angles(upper_pitch, "pitch", add = TRUE)
 
 ```
 
-
 Assuming no head tilt, gape is then the difference between upper- and lower-jaw pitch:
 
 ```{r}
@@ -295,13 +294,13 @@ gapes <- sort(unique(as.vector(outer(upper_pitch, lower_pitch, "-"))))
 gapes
 ```
 
-Here, we calculate all possible pitch differences, although some combinations may be incompatible because the two beak components must share the same yaw and view elevation. For a more constrained estimate, `find.3d()` can be used to retain these variables and combine only compatible configurations.
+Here, we calculate all possible pitch differences, although some combinations may be incompatible because the two beak components must share the same yaw and view elevation. A more constrained estimate can be obtained by retaining yaw and view elevation with `find.3d()` and calculating differences only between matching configurations.
 
 ## What if I'm interested in yaw?
 
 We can apply a similar workflow to estimate the yaw at which the bellbird is singing in the frame. The input is still the projected 2D pitch, but now we ask which yaws — rather than which pitches — are compatible with it.
 
-To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenience wrapper to the generic `find.3d()`. Let's start by assuming the lower jaw always opens approximately upward:
+To do so, we use `find.yaw()` — which, like `find.pitch()`, is a convenience wrapper to the generic `find.3d()`. Let's start by assuming the lower jaw always opens approximately downward:
 
 ```{r}
 lower_yaw <- find.yaw(lower_2d,
@@ -314,7 +313,7 @@ lower_yaw
 plot.angles(lower_yaw, "yaw")
 ```
 
-and the upper jaw approximately downward:
+and the upper jaw approximately upward:
 
 ```{r}
 upper_yaw <- find.yaw(upper_2d,
@@ -384,9 +383,6 @@ Biological knowledge can likewise justify candidate pitch ranges:
 ```{r, eval=FALSE}
 # A structure that cannot point downward
 candidate_pitches = 0:90
-
-# A bird's upper jaw opening mainly downward
-candidate_pitches = -90:20
 ```
 
 Broader candidate ranges make fewer assumptions but return more uncertainty. Narrower ranges return more precise estimates, but only if the assumptions behind them are justified.
